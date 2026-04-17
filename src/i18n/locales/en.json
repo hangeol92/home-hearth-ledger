@@ -1,5 +1,5 @@
 {
-  "app": { "title": "Household" },
+  "app": { "title": "Five Jars" },
   "nav": {
     "home": "Home",
     "history": "History",
@@ -8,13 +8,14 @@
     "settings": "Settings"
   },
   "dashboard": {
-    "balance": "Balance",
+    "balance": "Total Balance",
     "income": "Income",
     "expenses": "Expenses",
     "recent": "Recent",
     "seeAll": "See all",
     "empty": "No transactions yet",
-    "emptyHint": "Tap + to add your first one"
+    "emptyHint": "Tap + to add your first one",
+    "yourJars": "Your Jars"
   },
   "history": {
     "title": "History",
@@ -23,7 +24,7 @@
   },
   "budget": {
     "title": "Budget",
-    "subtitle": "Set monthly limits per category",
+    "subtitle": "Set monthly limits per jar",
     "spent": "spent",
     "of": "of",
     "remaining": "remaining",
@@ -34,7 +35,7 @@
   },
   "charts": {
     "title": "Charts",
-    "byCategory": "By Category",
+    "byJar": "Spending by Jar",
     "monthlyTrend": "Monthly Trend",
     "noData": "No data to show"
   },
@@ -45,7 +46,13 @@
     "exportCsv": "Export as CSV",
     "clearAll": "Clear all data",
     "noData": "No data to export",
-    "confirmClear": "Are you sure? This will delete all data."
+    "confirmClear": "Are you sure? This will delete all data.",
+    "fiveJars": "Five Jars Allocation",
+    "fiveJarsHint": "Income auto-splits across jars by these percentages. Must total 100%.",
+    "totalPct": "Total",
+    "resetBalances": "Reset jar balances",
+    "confirmReset": "Reset all jar balances to zero?",
+    "invalidTotal": "Allocations must sum to 100%"
   },
   "members": {
     "title": "Family Members",
@@ -59,15 +66,40 @@
     "income": "Income",
     "expense": "Expense",
     "amount": "Amount",
-    "category": "Category",
+    "jar": "Jar",
+    "subCategory": "Sub-category",
     "date": "Date",
     "note": "Note",
     "notePlaceholder": "Optional note",
     "member": "Member",
     "save": "Save",
-    "noMembers": "Add a family member first"
+    "noMembers": "Add a family member first",
+    "incomeHint": "Income auto-splits into all 5 jars by your allocation."
   },
-  "categories": {
+  "jars": {
+    "giving": "Giving",
+    "investing": "Investing",
+    "savings": "Savings",
+    "living": "Living",
+    "seed": "Seed",
+    "givingDesc": "Donations & charity",
+    "investingDesc": "Stocks, ETFs, NISA",
+    "savingsDesc": "Emergency & big purchases",
+    "livingDesc": "Daily expenses",
+    "seedDesc": "Opportunities & helping others"
+  },
+  "sub": {
+    "Donation": "Donation",
+    "Charity": "Charity",
+    "Tithe": "Tithe",
+    "Stocks": "Stocks",
+    "ETF": "ETF",
+    "NISA": "NISA",
+    "Crypto": "Crypto",
+    "Retirement": "Retirement",
+    "Emergency": "Emergency",
+    "Big Purchase": "Big Purchase",
+    "Travel": "Travel",
     "Food": "Food",
     "Rent": "Rent",
     "Utilities": "Utilities",
@@ -76,10 +108,9 @@
     "Health": "Health",
     "Education": "Education",
     "Entertainment": "Entertainment",
-    "Other": "Other",
-    "Salary": "Salary",
-    "Bonus": "Bonus",
-    "Investment": "Investment",
-    "Gift": "Gift"
+    "Opportunity": "Opportunity",
+    "Helping Others": "Helping Others",
+    "Business": "Business",
+    "Other": "Other"
   }
 }

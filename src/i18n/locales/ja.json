@@ -1,5 +1,5 @@
 {
-  "app": { "title": "家計簿" },
+  "app": { "title": "5つの壺" },
   "nav": {
     "home": "ホーム",
     "history": "履歴",
@@ -8,13 +8,14 @@
     "settings": "設定"
   },
   "dashboard": {
-    "balance": "残高",
+    "balance": "総残高",
     "income": "収入",
     "expenses": "支出",
     "recent": "最近の取引",
     "seeAll": "すべて見る",
     "empty": "取引がありません",
-    "emptyHint": "＋ボタンで追加してください"
+    "emptyHint": "＋ボタンで追加してください",
+    "yourJars": "あなたの壺"
   },
   "history": {
     "title": "履歴",
@@ -23,7 +24,7 @@
   },
   "budget": {
     "title": "予算",
-    "subtitle": "カテゴリごとの月間上限を設定",
+    "subtitle": "壺ごとの月間上限を設定",
     "spent": "使用済み",
     "of": "/",
     "remaining": "残り",
@@ -34,7 +35,7 @@
   },
   "charts": {
     "title": "グラフ",
-    "byCategory": "カテゴリ別",
+    "byJar": "壺別の支出",
     "monthlyTrend": "月別推移",
     "noData": "データがありません"
   },
@@ -45,7 +46,13 @@
     "exportCsv": "CSVエクスポート",
     "clearAll": "すべてのデータを削除",
     "noData": "エクスポートするデータがありません",
-    "confirmClear": "本当にすべてのデータを削除しますか？"
+    "confirmClear": "本当にすべてのデータを削除しますか？",
+    "fiveJars": "5つの壺の配分",
+    "fiveJarsHint": "収入はこの割合で各壺に自動振り分けされます。合計100%にしてください。",
+    "totalPct": "合計",
+    "resetBalances": "壺の残高をリセット",
+    "confirmReset": "すべての壺の残高をゼロにしますか？",
+    "invalidTotal": "配分の合計は100%にしてください"
   },
   "members": {
     "title": "家族メンバー",
@@ -59,15 +66,40 @@
     "income": "収入",
     "expense": "支出",
     "amount": "金額",
-    "category": "カテゴリ",
+    "jar": "壺",
+    "subCategory": "サブカテゴリ",
     "date": "日付",
     "note": "メモ",
     "notePlaceholder": "メモ（任意）",
     "member": "メンバー",
     "save": "保存",
-    "noMembers": "先に家族メンバーを追加してください"
+    "noMembers": "先に家族メンバーを追加してください",
+    "incomeHint": "収入は配分に従って5つの壺に自動振り分けされます。"
   },
-  "categories": {
+  "jars": {
+    "giving": "ギビング",
+    "investing": "投資",
+    "savings": "貯蓄",
+    "living": "生活",
+    "seed": "シード",
+    "givingDesc": "寄付・慈善",
+    "investingDesc": "株・ETF・NISA",
+    "savingsDesc": "緊急時・大きな買い物",
+    "livingDesc": "日々の支出",
+    "seedDesc": "機会・人助け"
+  },
+  "sub": {
+    "Donation": "寄付",
+    "Charity": "慈善",
+    "Tithe": "什分の一",
+    "Stocks": "株式",
+    "ETF": "ETF",
+    "NISA": "NISA",
+    "Crypto": "暗号資産",
+    "Retirement": "年金",
+    "Emergency": "緊急時",
+    "Big Purchase": "大きな買い物",
+    "Travel": "旅行",
     "Food": "食費",
     "Rent": "家賃",
     "Utilities": "光熱費",
@@ -76,10 +108,9 @@
     "Health": "医療",
     "Education": "教育",
     "Entertainment": "娯楽",
-    "Other": "その他",
-    "Salary": "給料",
-    "Bonus": "ボーナス",
-    "Investment": "投資",
-    "Gift": "贈り物"
+    "Opportunity": "機会",
+    "Helping Others": "人助け",
+    "Business": "事業",
+    "Other": "その他"
   }
 }

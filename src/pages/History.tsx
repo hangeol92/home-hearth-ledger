@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTransactions, useMembers, useCurrency } from '@/hooks/useStore';
-import { CategoryIcon } from '@/components/CategoryIcon';
+import { JarIcon } from '@/components/JarIcon';
 import { Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -69,9 +69,11 @@ export default function History() {
               <div className="space-y-2">
                 {txs.map(tx => (
                   <div key={tx.id} className="flex items-center gap-3 rounded-xl bg-card p-3 shadow-sm">
-                    <CategoryIcon category={tx.category} />
+                    <JarIcon jar={tx.jar} size={18} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{String(t(`categories.${tx.category}`, { defaultValue: tx.category }))}</p>
+                      <p className="font-medium text-sm">
+                        {t(`jars.${tx.jar}`)} · {String(t(`sub.${tx.subCategory}`, { defaultValue: tx.subCategory }))}
+                      </p>
                       <p className="text-xs text-muted-foreground truncate">
                         {tx.date.slice(5)} · {tx.note || getMemberName(tx.memberId)}
                       </p>

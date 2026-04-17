@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useBudgets, useTransactions, useCurrency } from '@/hooks/useStore';
-import { EXPENSE_CATEGORIES } from '@/types';
-import type { Budget, ExpenseCategory } from '@/types';
+import { JARS } from '@/types';
+import type { Budget, JarId } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { CategoryIcon } from '@/components/CategoryIcon';
+import { JarIcon } from '@/components/JarIcon';
 import { Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -15,7 +15,7 @@ export default function BudgetPage() {
   const { format } = useCurrency();
   const { t, i18n } = useTranslation();
   const [adding, setAdding] = useState(false);
-  const [newCat, setNewCat] = useState<ExpenseCategory>('Food');
+  const [newJar, setNewJar] = useState<JarId>('living');
   const [newAmount, setNewAmount] = useState('');
 
   const now = new Date();
@@ -24,14 +24,14 @@ export default function BudgetPage() {
   const monthBudgets = budgets.filter(b => b.month === currentMonth);
   const monthExpenses = transactions.filter(t => t.type === 'expense' && t.date.startsWith(currentMonth));
 
-  const getSpent = (cat: string) =>
-    monthExpenses.filter(t => t.category === cat).reduce((s, t) => s + t.amount, 0);
+  const getSpent = (jar: JarId) =>
+    monthExpenses.filter(t => t.jar === jar).reduce((s, t) => s + t.amount, 0);
 
   const handleAdd = async () => {
     if (!newAmount) return;
     const budget: Budget = {
-      id: `${currentMonth}-${newCat}`,
-      category: newCat,
+      id: `${currentMonth}-${newJar}`,
+      jar: newJar,
       amount: parseFloat(newAmount),
       month: currentMonth,
     };
@@ -40,8 +40,8 @@ export default function BudgetPage() {
     setNewAmount('');
   };
 
-  const usedCategories = monthBudgets.map(b => b.category);
-  const availableCategories = EXPENSE_CATEGORIES.filter(c => !usedCategories.includes(c));
+  const usedJars = monthBudgets.map(b => b.jar);
+  const availableJars = JARS.filter(j => !usedJars.includes(j.id));
 
   return (
     <div className="min-h-screen pb-24">
@@ -62,15 +62,15 @@ export default function BudgetPage() {
         )}
 
         {monthBudgets.map(b => {
-          const spent = getSpent(b.category);
+          const spent = getSpent(b.jar);
           const pct = Math.min((spent / b.amount) * 100, 100);
           const over = spent > b.amount;
           return (
             <div key={b.id} className="rounded-xl bg-card p-4 shadow-sm">
               <div className="flex items-center gap-3 mb-3">
-                <CategoryIcon category={b.category} size={18} />
+                <JarIcon jar={b.jar} size={18} />
                 <div className="flex-1">
-                  <p className="font-medium text-sm">{String(t(`categories.${b.category}`, { defaultValue: b.category }))}</p>
+                  <p className="font-medium text-sm">{t(`jars.${b.jar}`)}</p>
                   <p className="text-xs text-muted-foreground">
                     {format(spent)} / {format(b.amount)}
                   </p>
@@ -92,15 +92,16 @@ export default function BudgetPage() {
         {adding && (
           <div className="rounded-xl bg-card p-4 shadow-sm space-y-3">
             <div className="flex flex-wrap gap-2">
-              {availableCategories.map(c => (
+              {availableJars.map(j => (
                 <button
-                  key={c}
-                  onClick={() => setNewCat(c)}
+                  key={j.id}
+                  onClick={() => setNewJar(j.id)}
                   className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                    newCat === c ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                    newJar === j.id ? 'text-primary-foreground' : 'bg-secondary text-secondary-foreground'
                   }`}
+                  style={newJar === j.id ? { backgroundColor: j.color } : undefined}
                 >
-                  {String(t(`categories.${c}`, { defaultValue: c }))}
+                  {t(`jars.${j.id}`)}
                 </button>
               ))}
             </div>
@@ -119,9 +120,9 @@ export default function BudgetPage() {
           </div>
         )}
 
-        {!adding && availableCategories.length > 0 && (
+        {!adding && availableJars.length > 0 && (
           <button
-            onClick={() => { setAdding(true); setNewCat(availableCategories[0]); }}
+            onClick={() => { setAdding(true); setNewJar(availableJars[0].id); }}
             className="flex items-center gap-2 rounded-xl border-2 border-dashed border-border p-4 w-full text-muted-foreground text-sm"
           >
             <Plus className="h-4 w-4" /> {t('budget.setBudget')}
