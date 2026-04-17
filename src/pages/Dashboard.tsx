@@ -83,7 +83,7 @@ export default function Dashboard() {
               <div key={tx.id} className="flex items-center gap-3 rounded-xl bg-card p-3 shadow-sm">
                 <CategoryIcon category={tx.category} />
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">{t(`categories.${tx.category}`, tx.category)}</p>
+                  <p className="font-medium text-sm">{String(t(`categories.${tx.category}`, { defaultValue: tx.category }))}</p>
                   <p className="text-xs text-muted-foreground truncate">
                     {tx.note || getMemberName(tx.memberId)}
                   </p>

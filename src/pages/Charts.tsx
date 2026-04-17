@@ -25,7 +25,7 @@ export default function Charts() {
   }, {});
   const pieData = Object.entries(byCat).map(([name, value]) => ({
     name,
-    label: t(`categories.${name}`, name),
+    label: String(t(`categories.${name}`, { defaultValue: name })),
     value,
   }));
 

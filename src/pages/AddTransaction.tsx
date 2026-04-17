@@ -94,7 +94,7 @@ export default function AddTransaction() {
                     : 'bg-secondary text-secondary-foreground'
                 }`}
               >
-                {t(`categories.${c}`, c)}
+                {String(t(`categories.${c}`, { defaultValue: c }))}
               </button>
             ))}
           </div>

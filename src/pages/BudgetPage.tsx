@@ -70,7 +70,7 @@ export default function BudgetPage() {
               <div className="flex items-center gap-3 mb-3">
                 <CategoryIcon category={b.category} size={18} />
                 <div className="flex-1">
-                  <p className="font-medium text-sm">{t(`categories.${b.category}`, b.category)}</p>
+                  <p className="font-medium text-sm">{String(t(`categories.${b.category}`, { defaultValue: b.category }))}</p>
                   <p className="text-xs text-muted-foreground">
                     {format(spent)} / {format(b.amount)}
                   </p>
@@ -100,7 +100,7 @@ export default function BudgetPage() {
                     newCat === c ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
                   }`}
                 >
-                  {t(`categories.${c}`, c)}
+                  {String(t(`categories.${c}`, { defaultValue: c }))}
                 </button>
               ))}
             </div>
