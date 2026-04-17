@@ -1,0 +1,85 @@
+{
+  "app": { "title": "가계부" },
+  "nav": {
+    "home": "홈",
+    "history": "내역",
+    "budget": "예산",
+    "charts": "차트",
+    "settings": "설정"
+  },
+  "dashboard": {
+    "balance": "잔액",
+    "income": "수입",
+    "expenses": "지출",
+    "recent": "최근 내역",
+    "seeAll": "전체 보기",
+    "empty": "거래 내역이 없습니다",
+    "emptyHint": "＋ 버튼으로 추가하세요"
+  },
+  "history": {
+    "title": "내역",
+    "all": "전체",
+    "empty": "거래 내역이 없습니다"
+  },
+  "budget": {
+    "title": "예산",
+    "subtitle": "카테고리별 월 한도 설정",
+    "spent": "사용",
+    "of": "/",
+    "remaining": "남음",
+    "over": "예산 초과",
+    "setBudget": "예산 설정",
+    "save": "저장",
+    "cancel": "취소"
+  },
+  "charts": {
+    "title": "차트",
+    "byCategory": "카테고리별",
+    "monthlyTrend": "월별 추이",
+    "noData": "데이터가 없습니다"
+  },
+  "settings": {
+    "title": "설정",
+    "currency": "통화",
+    "language": "언어",
+    "exportCsv": "CSV 내보내기",
+    "clearAll": "모든 데이터 삭제",
+    "noData": "내보낼 데이터가 없습니다",
+    "confirmClear": "정말 모든 데이터를 삭제하시겠습니까?"
+  },
+  "members": {
+    "title": "가족 구성원",
+    "add": "구성원 추가",
+    "name": "이름",
+    "addBtn": "추가",
+    "cancel": "취소"
+  },
+  "add": {
+    "title": "거래 추가",
+    "income": "수입",
+    "expense": "지출",
+    "amount": "금액",
+    "category": "카테고리",
+    "date": "날짜",
+    "note": "메모",
+    "notePlaceholder": "메모 (선택)",
+    "member": "구성원",
+    "save": "저장",
+    "noMembers": "먼저 가족 구성원을 추가하세요"
+  },
+  "categories": {
+    "Food": "식비",
+    "Rent": "월세",
+    "Utilities": "공과금",
+    "Transport": "교통",
+    "Shopping": "쇼핑",
+    "Health": "의료",
+    "Education": "교육",
+    "Entertainment": "여가",
+    "Other": "기타",
+    "Salary": "급여",
+    "Bonus": "보너스",
+    "Investment": "투자",
+    "Gift": "선물"
+  }
+}

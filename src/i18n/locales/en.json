@@ -1,0 +1,85 @@
+{
+  "app": { "title": "Household" },
+  "nav": {
+    "home": "Home",
+    "history": "History",
+    "budget": "Budget",
+    "charts": "Charts",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "balance": "Balance",
+    "income": "Income",
+    "expenses": "Expenses",
+    "recent": "Recent",
+    "seeAll": "See all",
+    "empty": "No transactions yet",
+    "emptyHint": "Tap + to add your first one"
+  },
+  "history": {
+    "title": "History",
+    "all": "All",
+    "empty": "No transactions yet"
+  },
+  "budget": {
+    "title": "Budget",
+    "subtitle": "Set monthly limits per category",
+    "spent": "spent",
+    "of": "of",
+    "remaining": "remaining",
+    "over": "over budget",
+    "setBudget": "Set budget",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "charts": {
+    "title": "Charts",
+    "byCategory": "By Category",
+    "monthlyTrend": "Monthly Trend",
+    "noData": "No data to show"
+  },
+  "settings": {
+    "title": "Settings",
+    "currency": "Currency",
+    "language": "Language",
+    "exportCsv": "Export as CSV",
+    "clearAll": "Clear all data",
+    "noData": "No data to export",
+    "confirmClear": "Are you sure? This will delete all data."
+  },
+  "members": {
+    "title": "Family Members",
+    "add": "Add member",
+    "name": "Name",
+    "addBtn": "Add",
+    "cancel": "Cancel"
+  },
+  "add": {
+    "title": "Add Transaction",
+    "income": "Income",
+    "expense": "Expense",
+    "amount": "Amount",
+    "category": "Category",
+    "date": "Date",
+    "note": "Note",
+    "notePlaceholder": "Optional note",
+    "member": "Member",
+    "save": "Save",
+    "noMembers": "Add a family member first"
+  },
+  "categories": {
+    "Food": "Food",
+    "Rent": "Rent",
+    "Utilities": "Utilities",
+    "Transport": "Transport",
+    "Shopping": "Shopping",
+    "Health": "Health",
+    "Education": "Education",
+    "Entertainment": "Entertainment",
+    "Other": "Other",
+    "Salary": "Salary",
+    "Bonus": "Bonus",
+    "Investment": "Investment",
+    "Gift": "Gift"
+  }
+}
