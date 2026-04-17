@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 import { useTransactions, useMembers, useCurrency } from '@/hooks/useStore';
-import { getCategoryColor } from '@/components/CategoryIcon';
+import { JARS } from '@/types';
+import { getJarColor } from '@/components/JarIcon';
 import { useTranslation } from 'react-i18next';
 
 export default function Charts() {
@@ -19,15 +20,18 @@ export default function Charts() {
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
   const monthExpenses = filtered.filter(t => t.type === 'expense' && t.date.startsWith(currentMonth));
-  const byCat = monthExpenses.reduce<Record<string, number>>((acc, tx) => {
-    acc[tx.category] = (acc[tx.category] || 0) + tx.amount;
+  const byJar = monthExpenses.reduce<Record<string, number>>((acc, tx) => {
+    acc[tx.jar] = (acc[tx.jar] || 0) + tx.amount;
     return acc;
   }, {});
-  const pieData = Object.entries(byCat).map(([name, value]) => ({
-    name,
-    label: String(t(`categories.${name}`, { defaultValue: name })),
-    value,
-  }));
+  const pieData = JARS
+    .filter(j => byJar[j.id])
+    .map(j => ({
+      id: j.id,
+      label: t(`jars.${j.id}`),
+      value: byJar[j.id],
+      color: j.color,
+    }));
 
   const barData = [];
   for (let i = 5; i >= 0; i--) {
@@ -73,7 +77,7 @@ export default function Charts() {
 
       <div className="px-5 space-y-6">
         <div className="rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="font-semibold text-sm mb-1">{t('charts.byCategory')}</h2>
+          <h2 className="font-semibold text-sm mb-4">{t('charts.byJar')}</h2>
           {pieData.length === 0 ? (
             <p className="text-center py-8 text-sm text-muted-foreground">{t('charts.noData')}</p>
           ) : (
@@ -82,7 +86,7 @@ export default function Charts() {
                 <PieChart>
                   <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={2}>
                     {pieData.map((d, i) => (
-                      <Cell key={i} fill={getCategoryColor(d.name)} />
+                      <Cell key={i} fill={d.color} />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value: number) => format(value)} />
@@ -90,8 +94,8 @@ export default function Charts() {
               </ResponsiveContainer>
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
                 {pieData.map(d => (
-                  <div key={d.name} className="flex items-center gap-1.5 text-xs">
-                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getCategoryColor(d.name) }} />
+                  <div key={d.id} className="flex items-center gap-1.5 text-xs">
+                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
                     <span>{d.label}</span>
                     <span className="text-muted-foreground">{Math.round(d.value / totalExpense * 100)}%</span>
                   </div>

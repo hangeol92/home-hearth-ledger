@@ -1,5 +1,31 @@
 export type TransactionType = 'income' | 'expense';
 
+export type JarId = 'giving' | 'investing' | 'savings' | 'living' | 'seed';
+
+export interface JarDef {
+  id: JarId;
+  defaultPct: number;
+  color: string;
+  icon: string; // lucide icon name
+}
+
+export const JARS: JarDef[] = [
+  { id: 'giving',    defaultPct: 10, color: '#EC4899', icon: 'HandHeart' },
+  { id: 'investing', defaultPct: 10, color: '#8B5CF6', icon: 'TrendingUp' },
+  { id: 'savings',   defaultPct: 10, color: '#3B82F6', icon: 'PiggyBank' },
+  { id: 'living',    defaultPct: 60, color: '#10B981', icon: 'Home' },
+  { id: 'seed',      defaultPct: 10, color: '#F59E0B', icon: 'Sprout' },
+];
+
+export const JAR_SUBCATEGORIES: Record<JarId, string[]> = {
+  giving:    ['Donation', 'Charity', 'Tithe', 'Other'],
+  investing: ['Stocks', 'ETF', 'NISA', 'Crypto', 'Retirement', 'Other'],
+  savings:   ['Emergency', 'Big Purchase', 'Travel', 'Other'],
+  living:    ['Food', 'Rent', 'Utilities', 'Transport', 'Shopping', 'Health', 'Education', 'Entertainment', 'Other'],
+  seed:      ['Opportunity', 'Helping Others', 'Business', 'Other'],
+};
+
+// Legacy categories (kept for migration / type compatibility)
 export const EXPENSE_CATEGORIES = [
   'Food', 'Rent', 'Utilities', 'Transport', 'Shopping',
   'Health', 'Education', 'Entertainment', 'Other'
@@ -17,16 +43,25 @@ export interface Transaction {
   id: string;
   type: TransactionType;
   amount: number;
-  category: Category;
+  jar: JarId;
+  subCategory: string;
+  /** @deprecated kept for backwards compat with old data */
+  category?: Category;
   note: string;
-  date: string; // ISO date string
+  date: string;
   memberId: string;
   createdAt: string;
 }
 
+export interface JarBalance {
+  id: JarId;
+  balance: number;
+  allocationPct: number;
+}
+
 export interface Budget {
   id: string;
-  category: ExpenseCategory;
+  jar: JarId;
   amount: number;
   month: string; // YYYY-MM
 }
@@ -50,3 +85,11 @@ export const CURRENCIES = [
   { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
   { code: 'KRW', symbol: '₩', name: 'Korean Won' },
 ];
+
+// Map old expense category → jar (for migration)
+export const LEGACY_CATEGORY_TO_JAR: Record<string, JarId> = {
+  Food: 'living', Rent: 'living', Utilities: 'living', Transport: 'living',
+  Shopping: 'living', Health: 'living', Education: 'living',
+  Entertainment: 'living', Other: 'living',
+  Salary: 'living', Bonus: 'living', Investment: 'investing', Gift: 'giving',
+};

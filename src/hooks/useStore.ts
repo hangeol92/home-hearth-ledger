@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as db from '@/lib/db';
-import type { Transaction, Budget, FamilyMember } from '@/types';
+import type { Transaction, Budget, FamilyMember, JarBalance, JarId } from '@/types';
 
 export function useTransactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -14,12 +14,41 @@ export function useTransactions() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  /**
+   * Add a transaction.
+   * - Income: full amount auto-splits across all 5 jars by their allocationPct.
+   * - Expense: deducts the amount from the chosen jar.
+   */
   const add = async (tx: Transaction) => {
     await db.addTransaction(tx);
+
+    if (tx.type === 'income') {
+      const jars = await db.getAllJars();
+      const totalPct = jars.reduce((s, j) => s + j.allocationPct, 0) || 100;
+      for (const j of jars) {
+        const share = tx.amount * (j.allocationPct / totalPct);
+        await db.adjustJarBalance(j.id, share);
+      }
+    } else {
+      await db.adjustJarBalance(tx.jar, -tx.amount);
+    }
     await refresh();
   };
 
   const remove = async (id: string) => {
+    // Reverse jar effects
+    const tx = transactions.find(t => t.id === id);
+    if (tx) {
+      if (tx.type === 'income') {
+        const jars = await db.getAllJars();
+        const totalPct = jars.reduce((s, j) => s + j.allocationPct, 0) || 100;
+        for (const j of jars) {
+          await db.adjustJarBalance(j.id, -(tx.amount * (j.allocationPct / totalPct)));
+        }
+      } else {
+        await db.adjustJarBalance(tx.jar, tx.amount);
+      }
+    }
     await db.deleteTransaction(id);
     await refresh();
   };
@@ -69,6 +98,30 @@ export function useMembers() {
   };
 
   return { members, save, remove, refresh };
+}
+
+export function useJars() {
+  const [jars, setJars] = useState<JarBalance[]>([]);
+
+  const refresh = useCallback(async () => {
+    setJars(await db.getAllJars());
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const updateAllocation = async (id: JarId, pct: number) => {
+    const j = jars.find(x => x.id === id);
+    if (!j) return;
+    await db.saveJar({ ...j, allocationPct: pct });
+    await refresh();
+  };
+
+  const reset = async () => {
+    await db.resetJarBalances();
+    await refresh();
+  };
+
+  return { jars, updateAllocation, reset, refresh };
 }
 
 export function useCurrency() {

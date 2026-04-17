@@ -1,5 +1,5 @@
 {
-  "app": { "title": "가계부" },
+  "app": { "title": "다섯 항아리" },
   "nav": {
     "home": "홈",
     "history": "내역",
@@ -8,13 +8,14 @@
     "settings": "설정"
   },
   "dashboard": {
-    "balance": "잔액",
+    "balance": "총 잔액",
     "income": "수입",
     "expenses": "지출",
     "recent": "최근 내역",
     "seeAll": "전체 보기",
     "empty": "거래 내역이 없습니다",
-    "emptyHint": "＋ 버튼으로 추가하세요"
+    "emptyHint": "＋ 버튼으로 추가하세요",
+    "yourJars": "내 항아리"
   },
   "history": {
     "title": "내역",
@@ -23,7 +24,7 @@
   },
   "budget": {
     "title": "예산",
-    "subtitle": "카테고리별 월 한도 설정",
+    "subtitle": "항아리별 월 한도 설정",
     "spent": "사용",
     "of": "/",
     "remaining": "남음",
@@ -34,7 +35,7 @@
   },
   "charts": {
     "title": "차트",
-    "byCategory": "카테고리별",
+    "byJar": "항아리별 지출",
     "monthlyTrend": "월별 추이",
     "noData": "데이터가 없습니다"
   },
@@ -45,7 +46,13 @@
     "exportCsv": "CSV 내보내기",
     "clearAll": "모든 데이터 삭제",
     "noData": "내보낼 데이터가 없습니다",
-    "confirmClear": "정말 모든 데이터를 삭제하시겠습니까?"
+    "confirmClear": "정말 모든 데이터를 삭제하시겠습니까?",
+    "fiveJars": "다섯 항아리 배분",
+    "fiveJarsHint": "수입은 이 비율로 각 항아리에 자동 분배됩니다. 합계 100%여야 합니다.",
+    "totalPct": "합계",
+    "resetBalances": "항아리 잔액 초기화",
+    "confirmReset": "모든 항아리 잔액을 0으로 초기화할까요?",
+    "invalidTotal": "배분 합계는 100%여야 합니다"
   },
   "members": {
     "title": "가족 구성원",
@@ -59,15 +66,40 @@
     "income": "수입",
     "expense": "지출",
     "amount": "금액",
-    "category": "카테고리",
+    "jar": "항아리",
+    "subCategory": "세부 항목",
     "date": "날짜",
     "note": "메모",
     "notePlaceholder": "메모 (선택)",
     "member": "구성원",
     "save": "저장",
-    "noMembers": "먼저 가족 구성원을 추가하세요"
+    "noMembers": "먼저 가족 구성원을 추가하세요",
+    "incomeHint": "수입은 배분에 따라 다섯 항아리로 자동 분배됩니다."
   },
-  "categories": {
+  "jars": {
+    "giving": "기부",
+    "investing": "투자",
+    "savings": "저축",
+    "living": "생활",
+    "seed": "씨앗",
+    "givingDesc": "기부와 자선",
+    "investingDesc": "주식, ETF, NISA",
+    "savingsDesc": "비상금과 큰 지출",
+    "livingDesc": "일상 지출",
+    "seedDesc": "기회와 돕기"
+  },
+  "sub": {
+    "Donation": "기부",
+    "Charity": "자선",
+    "Tithe": "십일조",
+    "Stocks": "주식",
+    "ETF": "ETF",
+    "NISA": "NISA",
+    "Crypto": "암호화폐",
+    "Retirement": "연금",
+    "Emergency": "비상금",
+    "Big Purchase": "큰 지출",
+    "Travel": "여행",
     "Food": "식비",
     "Rent": "월세",
     "Utilities": "공과금",
@@ -76,10 +108,9 @@
     "Health": "의료",
     "Education": "교육",
     "Entertainment": "여가",
-    "Other": "기타",
-    "Salary": "급여",
-    "Bonus": "보너스",
-    "Investment": "투자",
-    "Gift": "선물"
+    "Opportunity": "기회",
+    "Helping Others": "돕기",
+    "Business": "사업",
+    "Other": "기타"
   }
 }
