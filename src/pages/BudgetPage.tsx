@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CategoryIcon } from '@/components/CategoryIcon';
 import { Plus, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function BudgetPage() {
   const { budgets, save, remove } = useBudgets();
   const { transactions } = useTransactions();
   const { format } = useCurrency();
+  const { t, i18n } = useTranslation();
   const [adding, setAdding] = useState(false);
   const [newCat, setNewCat] = useState<ExpenseCategory>('Food');
   const [newAmount, setNewAmount] = useState('');
@@ -45,9 +47,9 @@ export default function BudgetPage() {
     <div className="min-h-screen pb-24">
       <div className="px-5 pt-14 pb-4 safe-top">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Budget</h1>
+          <h1 className="text-2xl font-bold">{t('budget.title')}</h1>
           <p className="text-sm text-muted-foreground">
-            {now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            {now.toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' })}
           </p>
         </div>
       </div>
@@ -55,7 +57,7 @@ export default function BudgetPage() {
       <div className="px-5 space-y-3">
         {monthBudgets.length === 0 && !adding && (
           <p className="text-center text-muted-foreground py-12 text-sm">
-            No budgets set. Tap + to add one.
+            {t('budget.subtitle')}
           </p>
         )}
 
@@ -68,7 +70,7 @@ export default function BudgetPage() {
               <div className="flex items-center gap-3 mb-3">
                 <CategoryIcon category={b.category} size={18} />
                 <div className="flex-1">
-                  <p className="font-medium text-sm">{b.category}</p>
+                  <p className="font-medium text-sm">{t(`categories.${b.category}`, b.category)}</p>
                   <p className="text-xs text-muted-foreground">
                     {format(spent)} / {format(b.amount)}
                   </p>
@@ -80,7 +82,7 @@ export default function BudgetPage() {
               <Progress value={pct} className={`h-2 ${over ? '[&>div]:bg-destructive' : '[&>div]:bg-primary'}`} />
               {over && (
                 <p className="text-xs text-destructive font-medium mt-1">
-                  Over budget by {format(spent - b.amount)}
+                  {t('budget.over')} {format(spent - b.amount)}
                 </p>
               )}
             </div>
@@ -98,21 +100,21 @@ export default function BudgetPage() {
                     newCat === c ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
                   }`}
                 >
-                  {c}
+                  {t(`categories.${c}`, c)}
                 </button>
               ))}
             </div>
             <Input
               type="number"
-              placeholder="Budget amount"
+              placeholder={t('budget.setBudget')}
               value={newAmount}
               onChange={e => setNewAmount(e.target.value)}
               className="rounded-xl"
               inputMode="decimal"
             />
             <div className="flex gap-2">
-              <Button onClick={handleAdd} size="sm" className="rounded-xl" disabled={!newAmount}>Save</Button>
-              <Button onClick={() => setAdding(false)} variant="ghost" size="sm">Cancel</Button>
+              <Button onClick={handleAdd} size="sm" className="rounded-xl" disabled={!newAmount}>{t('budget.save')}</Button>
+              <Button onClick={() => setAdding(false)} variant="ghost" size="sm">{t('budget.cancel')}</Button>
             </div>
           </div>
         )}
@@ -122,7 +124,7 @@ export default function BudgetPage() {
             onClick={() => { setAdding(true); setNewCat(availableCategories[0]); }}
             className="flex items-center gap-2 rounded-xl border-2 border-dashed border-border p-4 w-full text-muted-foreground text-sm"
           >
-            <Plus className="h-4 w-4" /> Add budget
+            <Plus className="h-4 w-4" /> {t('budget.setBudget')}
           </button>
         )}
       </div>
