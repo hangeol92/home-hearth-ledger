@@ -1,20 +1,21 @@
 import { Home, List, PieChart, Wallet, Settings } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-
-const tabs = [
-  { path: '/', icon: Home, label: 'Home' },
-  { path: '/history', icon: List, label: 'History' },
-  { path: '/budget', icon: Wallet, label: 'Budget' },
-  { path: '/charts', icon: PieChart, label: 'Charts' },
-  { path: '/settings', icon: Settings, label: 'Settings' },
-];
 
 export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
-  // Hide on add transaction page
+  const tabs = [
+    { path: '/', icon: Home, label: t('nav.home') },
+    { path: '/history', icon: List, label: t('nav.history') },
+    { path: '/budget', icon: Wallet, label: t('nav.budget') },
+    { path: '/charts', icon: PieChart, label: t('nav.charts') },
+    { path: '/settings', icon: Settings, label: t('nav.settings') },
+  ];
+
   if (location.pathname === '/add') return null;
 
   return (

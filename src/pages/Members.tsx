@@ -6,10 +6,12 @@ import { MEMBER_COLORS } from '@/types';
 import type { FamilyMember } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 export default function Members() {
   const navigate = useNavigate();
   const { members, save, remove } = useMembers();
+  const { t } = useTranslation();
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
   const [color, setColor] = useState(MEMBER_COLORS[0]);
@@ -32,7 +34,7 @@ export default function Members() {
         <button onClick={() => navigate(-1)} className="p-1">
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <h1 className="text-lg font-semibold">Family Members</h1>
+        <h1 className="text-lg font-semibold">{t('members.title')}</h1>
       </div>
 
       <div className="px-5 space-y-3">
@@ -53,7 +55,7 @@ export default function Members() {
             <Input
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="Name"
+              placeholder={t('members.name')}
               className="rounded-xl"
               autoFocus
             />
@@ -68,8 +70,8 @@ export default function Members() {
               ))}
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleAdd} size="sm" className="rounded-xl" disabled={!name.trim()}>Add</Button>
-              <Button onClick={() => setAdding(false)} variant="ghost" size="sm">Cancel</Button>
+              <Button onClick={handleAdd} size="sm" className="rounded-xl" disabled={!name.trim()}>{t('members.addBtn')}</Button>
+              <Button onClick={() => setAdding(false)} variant="ghost" size="sm">{t('members.cancel')}</Button>
             </div>
           </div>
         ) : (
@@ -77,7 +79,7 @@ export default function Members() {
             onClick={() => setAdding(true)}
             className="flex items-center gap-2 rounded-xl border-2 border-dashed border-border p-4 w-full text-muted-foreground text-sm"
           >
-            <Plus className="h-4 w-4" /> Add member
+            <Plus className="h-4 w-4" /> {t('members.add')}
           </button>
         )}
       </div>

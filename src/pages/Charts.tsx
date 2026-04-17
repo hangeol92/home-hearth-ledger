@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 import { useTransactions, useMembers, useCurrency } from '@/hooks/useStore';
 import { getCategoryColor } from '@/components/CategoryIcon';
+import { useTranslation } from 'react-i18next';
 
 export default function Charts() {
   const { transactions } = useTransactions();
   const { members } = useMembers();
   const { format } = useCurrency();
+  const { t, i18n } = useTranslation();
   const [memberFilter, setMemberFilter] = useState('all');
 
   const filtered = memberFilter === 'all'
@@ -16,24 +18,26 @@ export default function Charts() {
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-  // Pie chart: spending by category this month
   const monthExpenses = filtered.filter(t => t.type === 'expense' && t.date.startsWith(currentMonth));
-  const byCat = monthExpenses.reduce<Record<string, number>>((acc, t) => {
-    acc[t.category] = (acc[t.category] || 0) + t.amount;
+  const byCat = monthExpenses.reduce<Record<string, number>>((acc, tx) => {
+    acc[tx.category] = (acc[tx.category] || 0) + tx.amount;
     return acc;
   }, {});
-  const pieData = Object.entries(byCat).map(([name, value]) => ({ name, value }));
+  const pieData = Object.entries(byCat).map(([name, value]) => ({
+    name,
+    label: String(t(`categories.${name}`, { defaultValue: name })),
+    value,
+  }));
 
-  // Bar chart: last 6 months
   const barData = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const mTx = filtered.filter(t => t.date.startsWith(m));
+    const mTx = filtered.filter(tx => tx.date.startsWith(m));
     barData.push({
-      month: d.toLocaleDateString('en-US', { month: 'short' }),
-      income: mTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
-      expense: mTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+      month: d.toLocaleDateString(i18n.language, { month: 'short' }),
+      income: mTx.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0),
+      expense: mTx.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0),
     });
   }
 
@@ -42,10 +46,9 @@ export default function Charts() {
   return (
     <div className="min-h-screen pb-24">
       <div className="px-5 pt-14 pb-4 safe-top">
-        <h1 className="text-2xl font-bold">Charts</h1>
+        <h1 className="text-2xl font-bold">{t('charts.title')}</h1>
       </div>
 
-      {/* Member filter */}
       {members.length > 0 && (
         <div className="px-5 pb-4">
           <div className="flex gap-2 overflow-x-auto no-scrollbar">
@@ -54,7 +57,7 @@ export default function Charts() {
               className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium ${
                 memberFilter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
               }`}
-            >All</button>
+            >{t('history.all')}</button>
             {members.map(m => (
               <button
                 key={m.id}
@@ -69,12 +72,10 @@ export default function Charts() {
       )}
 
       <div className="px-5 space-y-6">
-        {/* Pie */}
         <div className="rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="font-semibold text-sm mb-1">Spending by Category</h2>
-          <p className="text-xs text-muted-foreground mb-4">This month</p>
+          <h2 className="font-semibold text-sm mb-1">{t('charts.byCategory')}</h2>
           {pieData.length === 0 ? (
-            <p className="text-center py-8 text-sm text-muted-foreground">No data</p>
+            <p className="text-center py-8 text-sm text-muted-foreground">{t('charts.noData')}</p>
           ) : (
             <>
               <ResponsiveContainer width="100%" height={200}>
@@ -91,7 +92,7 @@ export default function Charts() {
                 {pieData.map(d => (
                   <div key={d.name} className="flex items-center gap-1.5 text-xs">
                     <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getCategoryColor(d.name) }} />
-                    <span>{d.name}</span>
+                    <span>{d.label}</span>
                     <span className="text-muted-foreground">{Math.round(d.value / totalExpense * 100)}%</span>
                   </div>
                 ))}
@@ -100,10 +101,8 @@ export default function Charts() {
           )}
         </div>
 
-        {/* Bar */}
         <div className="rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="font-semibold text-sm mb-1">Monthly Trend</h2>
-          <p className="text-xs text-muted-foreground mb-4">Last 6 months</p>
+          <h2 className="font-semibold text-sm mb-4">{t('charts.monthlyTrend')}</h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={barData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />

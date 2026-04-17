@@ -1,0 +1,85 @@
+{
+  "app": { "title": "家計簿" },
+  "nav": {
+    "home": "ホーム",
+    "history": "履歴",
+    "budget": "予算",
+    "charts": "グラフ",
+    "settings": "設定"
+  },
+  "dashboard": {
+    "balance": "残高",
+    "income": "収入",
+    "expenses": "支出",
+    "recent": "最近の取引",
+    "seeAll": "すべて見る",
+    "empty": "取引がありません",
+    "emptyHint": "＋ボタンで追加してください"
+  },
+  "history": {
+    "title": "履歴",
+    "all": "すべて",
+    "empty": "取引がありません"
+  },
+  "budget": {
+    "title": "予算",
+    "subtitle": "カテゴリごとの月間上限を設定",
+    "spent": "使用済み",
+    "of": "/",
+    "remaining": "残り",
+    "over": "予算超過",
+    "setBudget": "予算を設定",
+    "save": "保存",
+    "cancel": "キャンセル"
+  },
+  "charts": {
+    "title": "グラフ",
+    "byCategory": "カテゴリ別",
+    "monthlyTrend": "月別推移",
+    "noData": "データがありません"
+  },
+  "settings": {
+    "title": "設定",
+    "currency": "通貨",
+    "language": "言語",
+    "exportCsv": "CSVエクスポート",
+    "clearAll": "すべてのデータを削除",
+    "noData": "エクスポートするデータがありません",
+    "confirmClear": "本当にすべてのデータを削除しますか？"
+  },
+  "members": {
+    "title": "家族メンバー",
+    "add": "メンバーを追加",
+    "name": "名前",
+    "addBtn": "追加",
+    "cancel": "キャンセル"
+  },
+  "add": {
+    "title": "取引を追加",
+    "income": "収入",
+    "expense": "支出",
+    "amount": "金額",
+    "category": "カテゴリ",
+    "date": "日付",
+    "note": "メモ",
+    "notePlaceholder": "メモ（任意）",
+    "member": "メンバー",
+    "save": "保存",
+    "noMembers": "先に家族メンバーを追加してください"
+  },
+  "categories": {
+    "Food": "食費",
+    "Rent": "家賃",
+    "Utilities": "光熱費",
+    "Transport": "交通費",
+    "Shopping": "買い物",
+    "Health": "医療",
+    "Education": "教育",
+    "Entertainment": "娯楽",
+    "Other": "その他",
+    "Salary": "給料",
+    "Bonus": "ボーナス",
+    "Investment": "投資",
+    "Gift": "贈り物"
+  }
+}
