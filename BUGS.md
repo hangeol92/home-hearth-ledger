@@ -821,3 +821,138 @@
 2. invite_tokens 테이블 신규 생성 + 폐기 로직 추가
 3. 모든 API 함수에 401 에러 처리 추가
 4. AuthCallback 에러 처리 강화
+
+---
+
+## 영수증 스캔 기능 QA 분석
+- 테스트 일자: 2026-04-19
+- 테스트 범위: 코드 정적 분석 (브라우저 실행 제외)
+- 분석 대상: receiptParser.ts, useReceiptScanner.ts, CalendarPage.tsx, AddTransaction.tsx, ScanActionSheet.tsx, ReceiptResultSheet.tsx, ScanningScreen.tsx, PermissionGuide.tsx
+
+### 시나리오별 분석 결과
+
+#### 1. 액션 시트 동작
+**상태**: PASS ✓
+- ScanActionSheet 조건부 렌더링: showActionSheet state 확인 (CalendarPage 라인 198-214)
+- 3개 옵션(camera/gallery/manual) 핸들러 연결 확인 ✓
+  - onCamera: scanFromCamera() 호출 (라인 201-203)
+  - onGallery: scanFromGallery() 호출 (라인 204-206)
+  - onManual: navigate('/add', { state: { date: ... } }) 호출 (라인 208-211)
+  - onClose: setShowActionSheet(false) 호출 (라인 212)
+- 배경 클릭 닫힘: ScanActionSheet의 onClick={onClose} 구현 (라인 13)
+- 취소 버튼: "취소" 텍스트 표시, onClose 연결 (라인 56-62)
+
+#### 2. 카메라/갤러리 플로우
+**상태**: PASS ✓
+- useReceiptScanner의 구현 분석:
+  - scan() 함수: 'camera' | 'gallery' 파라미터 분기 (라인 41-70)
+  - 권한 거부 감지: /permission/i, /denied/i 정규식으로 에러 메시지 검사 (라인 59-60)
+    - 정확히 'permission_denied' 상태로 설정 ✓
+  - 사용자 취소 감지: /cancel/i, /user cancelled/i 정규식 (라인 61-64)
+    - 정확히 'cancelled' 상태 + status='idle' 복원 ✓
+  - 상태 전이: idle → scanning → processing → done/error 정확 (라인 42-70)
+  - base64String 검증: !photo.base64String 체크 후 에러 처리 (라인 51-55)
+
+#### 3. OCR 파싱 로직
+**상태**: PASS ✓ (몇 가지 주의사항)
+- receiptParser.ts 분석:
+  - **합계/총액 패턴**: /합계|총액|총합계|total|결제금액|받을금액|청구금액/i (라인 10) — 포괄적 ✓
+  - **날짜 정규식** (라인 13-17):
+    1. \d{4}[.\-/]\d{1,2}[.\-/]\d{1,2} — YYYY.MM.DD, YYYY-MM-DD, YYYY/MM/DD ✓
+    2. \d{2}[./]\d{1,2}[./]\d{1,2} — YY/MM/DD, YY.MM.DD ✓
+    3. \d{4}년\s*\d{1,2}월\s*\d{1,2}일 — 한글 형식 (예: 2026년4월19일) ✓
+  - **날짜 유효성 검증** (라인 44-47):
+    - month ∈ [1, 12], day ∈ [1, 31] 범위 확인 (너무 느슨함 — 30/31일 달 구분 없음)
+    - 년도: < 100이면 + 2000 처리 ✓
+    - 결과 형식: YYYY-MM-DD 좌충우돌 ✓
+  - **가게명 추출** (라인 61-66):
+    - 첫 5줄에서 추출 + trim() + RECEIPT_KEYWORDS 필터링 + 숫자 시작 제외 ✓
+    - 첫 번째 후보 반환 (null 가능) ✓
+  - **카테고리 매핑** (라인 19-26):
+    - 6개 규칙 구현: Food, Health, Transport (라인 19-26)
+    - guessCategory() 분기: 첫 매칭 규칙 적용 (라인 54-58)
+    - 규칙 없으면 'Other' 반환 ✓
+  - **합계 금액 추출** (라인 28-35):
+    - AMOUNT_PATTERN: /[\d,]+/g으로 모든 숫자 추출 (라인 11)
+    - 합계 키워드 라인에서만 찾기 (라인 73-79)
+    - 폴백: 문서 전체에서 >= 100인 최대값 사용 (라인 82-87) ✓
+  - **문제 점**: 
+    - 날짜 유효성 검증이 느슨 (2026년 2월 31일도 valid로 표시 가능)
+    - 하지만 parseReceipt() 실패 시 null 반환이 아니라 불완전한 객체 반환 (rawText만 필수)
+
+#### 4. prefill → 거래 등록 연결
+**상태**: PASS ✓
+- CalendarPage에서 ReceiptResultSheet 렌더링 (라인 220-228)
+  - onConfirm: navigate('/add', { state: { prefill: scanResult, date: ... } }) (라인 223-224)
+  - 파라미터 전달 정확 ✓
+- AddTransaction.tsx에서 prefill 읽기 (라인 288):
+  - (state as { prefill?: ReceiptParseResult } | null)?.prefill 타입 안전 ✓
+- prefill 필드 매핑 (라인 291-300):
+  - prefill.amount → amount 상태 (라인 291) ✓
+  - prefill.date → date 상태 (라인 297-300) ✓
+  - prefill.storeName → note 상태 (라인 296) ✓
+  - prefill.category → subCategory 맵핑 (라인 293-294) 
+    - **주의**: prefill.category는 'Food' | 'Health' | 'Transport' | 'Other'인데
+    - JAR_SUBCATEGORIES[jar]는 구체적 서브카테고리 배열 (예: ['카페', '식당', '마트'])
+    - 직접 매핑 불가능 → fallback으로 첫 subcategory 사용 ✓ (라인 294)
+
+#### 5. 직접 입력 플로우
+**상태**: PASS ✓
+- CalendarPage의 onManual 핸들러 (라인 208-211):
+  - navigate('/add', { state: { date: selectedDate ?? today } })
+  - prefill 없이 date만 전달 ✓
+- AddTransaction에서 처리 (라인 288-300):
+  - prefill이 undefined이면 amount='' 초기화 (라인 291)
+  - date는 state.date 또는 현재 날짜로 설정 (라인 297-300) ✓
+- 기존 거래 등록 기능과의 구분: prefill 유무로 분기 ✓
+
+#### 6. 웹 환경 폴백
+**상태**: PARTIAL ⚠️
+- useReceiptScanner의 import 분석 (라인 26-29):
+  ```typescript
+  const { CapacitorPluginMlKitTextRecognition } = await import(
+    '@pantrist/capacitor-plugin-ml-kit-text-recognition'
+  );
+  ```
+  - 동적 import 사용 → 모듈 없으면 runtime 에러 (브라우저 환경)
+- processBase64() 에러 처리 (라인 35-38):
+  - catch에서 'ocr_failed' 상태 설정 ✓
+  - 에러 메시지: '메시지: OCR 처리에 실패했습니다.'
+- **문제**: 웹 환경에서 try-catch로 폴백하나, 사용자에게는 'OCR 실패' 메시지만 표시
+  - Capacitor 미지원 환경을 명시적으로 감지하는 로직 없음
+  - 대안: web 환경 감지 후 "이 기능은 모바일 앱에서만 지원됩니다" 메시지 권고
+
+### 발견된 이슈
+
+| 번호 | 심각도 | 위치 | 내용 | 상태 |
+|---|---|---|---|---|
+| R1 | MEDIUM | receiptParser.ts:44-47 | 날짜 유효성 검증 느슨 — 2월 31일도 valid로 표시 가능 | OPEN |
+| R2 | MEDIUM | useReceiptScanner.ts:26-31 | 웹 환경에서 Capacitor 모듈 동적 import 실패 시 '처리 실패' 메시지만 표시 (원인 미분명) | OPEN |
+| R3 | LOW | AddTransaction.tsx:293-294 | OCR prefill.category를 subCategory로 직접 매핑 불가능 → fallback으로 첫 항목 사용 (UX 개선 권고) | OPEN |
+| R4 | LOW | PermissionGuide.tsx:8-11 | handleOpenSettings() 함수가 native 환경과 web 환경 구분 없음 (주석만 있음) | OPEN |
+
+### 종합 평가
+
+**강점**:
+- ✅ 기본 동작 플로우 정확 (카메라/갤러리 선택 → OCR → 결과 확인 → 거래 등록)
+- ✅ 상태 전이 명확 (idle → scanning/processing → done/error)
+- ✅ 권한 거부 및 사용자 취소 감지 정확
+- ✅ prefill → AddTransaction 필드 매핑 안전
+- ✅ 문서 전체에서 금액 추출 시 fallback 로직 있음
+
+**약점**:
+- ⚠️ 날짜 유효성 검증 부족 (범위 체크만, 달력 유효성 미확인)
+- ⚠️ 웹 환경에서 Capacitor 모듈 없을 시 폴백 메시지 불명확
+- ⚠️ OCR 카테고리와 앱의 jar subCategory 매핑 미스매치 (자동 fallback에 의존)
+- ⚠️ PermissionGuide가 네이티브 환경에서 시스템 설정 오픈 구현 없음 (주석만)
+
+**권고사항**:
+1. receiptParser.ts: 날짜 검증을 isValidDate(year, month, day) 함수로 강화
+2. useReceiptScanner.ts: Capacitor 미지원 감지 로직 추가 (isCapacitorAvailable() 등)
+3. AddTransaction.tsx: OCR 카테고리 → jar 자동 매핑 개선 (사전 구축)
+4. PermissionGuide.tsx: native/web 환경 구분 후 설정 오픈 로직 구현
+
+**테스트 권고**:
+- 수동 테스트: iOS/Android에서 실제 카메라/갤러리 권한 거부 시나리오
+- 엣지 케이스: 2월 29일/30일, 3월 31일 등 날짜 경계 테스트
+- 웹 환경: 개발자 도구 Network throttle에서 Capacitor 모듈 로드 실패 시나리오

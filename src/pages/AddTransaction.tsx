@@ -4,6 +4,7 @@ import { ChevronLeft, Plus, Eye, EyeOff, Trash2, Check, X, Pencil } from 'lucide
 import { useTransactions, useMembers, useCurrency } from '@/hooks/useStore';
 import { JARS, JAR_SUBCATEGORIES, SUBCATEGORY_ICONS, MEMBER_ROLES, MEMBER_COLORS, MEMBER_EMOJI_OPTIONS, type MemberRole } from '@/types';
 import type { Transaction, TransactionType, JarId, FamilyMember } from '@/types';
+import type { ReceiptParseResult } from '@/utils/receiptParser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { JarIcon, getJarColor } from '@/components/JarIcon';
@@ -284,13 +285,19 @@ export default function AddTransaction() {
   const { t } = useTranslation();
   const { setActiveMember } = useActiveMember();
 
+  const prefill = (state as { prefill?: ReceiptParseResult } | null)?.prefill;
+
   const [type, setType] = useState<TransactionType>('expense');
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(prefill?.amount != null ? String(prefill.amount) : '');
   const [jar, setJar] = useState<JarId>('living');
-  const [subCategory, setSubCategory] = useState<string>(JAR_SUBCATEGORIES.living[0]);
-  const [note, setNote] = useState('');
+  const [subCategory, setSubCategory] = useState<string>(
+    prefill?.category ?? JAR_SUBCATEGORIES.living[0]
+  );
+  const [note, setNote] = useState(prefill?.storeName ?? '');
   const [date, setDate] = useState<string>(
-    (state as { date?: string } | null)?.date ?? new Date().toISOString().split('T')[0]
+    prefill?.date ??
+    (state as { date?: string } | null)?.date ??
+    new Date().toISOString().split('T')[0]
   );
   const [memberId, setMemberId] = useState('');
   const [showManage, setShowManage] = useState(false);

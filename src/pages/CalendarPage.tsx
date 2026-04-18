@@ -7,6 +7,11 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useActiveMember } from '@/hooks/useActiveMember';
 import MemberSelectSheet from '@/components/member/MemberSelectSheet';
+import { useReceiptScanner } from '@/hooks/useReceiptScanner';
+import ScanActionSheet from '@/components/receipt/ScanActionSheet';
+import ScanningScreen from '@/components/receipt/ScanningScreen';
+import ReceiptResultSheet from '@/components/receipt/ReceiptResultSheet';
+import PermissionGuide from '@/components/receipt/PermissionGuide';
 
 function getWeekdays(locale: string) {
   return Array.from({ length: 7 }, (_, i) => {
@@ -23,6 +28,8 @@ export default function CalendarPage() {
   const { members } = useMembers();
   const { activeMember, setActiveMember } = useActiveMember();
   const [showMemberSheet, setShowMemberSheet] = useState(false);
+  const [showActionSheet, setShowActionSheet] = useState(false);
+  const { status: scanStatus, result: scanResult, error: scanError, scanFromCamera, scanFromGallery, reset: resetScan } = useReceiptScanner();
   const {
     year, month, selectedDate,
     totalIncome, totalExpense,
@@ -57,7 +64,7 @@ export default function CalendarPage() {
           <button
             onClick={() => {
               if (activeMember || members.length === 0) {
-                navigate('/add', { state: { date: selectedDate ?? today } });
+                setShowActionSheet(true);
               } else {
                 setShowMemberSheet(true);
               }
@@ -164,8 +171,8 @@ export default function CalendarPage() {
       <div className="fixed bottom-0 left-0 right-0 flex justify-center z-40 pb-safe mb-20">
         <button
           onClick={() => {
-            if (activeMember) {
-              navigate('/add');
+            if (activeMember || members.length === 0) {
+              setShowActionSheet(true);
             } else {
               setShowMemberSheet(true);
             }
@@ -175,16 +182,54 @@ export default function CalendarPage() {
           {t('calendar.addTransaction')}
         </button>
       </div>
+
       {showMemberSheet && (
         <MemberSelectSheet
           members={members}
           onSelect={(m) => {
             setActiveMember(m);
             setShowMemberSheet(false);
-            navigate('/add', { state: { date: selectedDate ?? today } });
+            setShowActionSheet(true);
           }}
           onClose={() => setShowMemberSheet(false)}
         />
+      )}
+
+      {showActionSheet && (
+        <ScanActionSheet
+          onCamera={() => {
+            setShowActionSheet(false);
+            scanFromCamera();
+          }}
+          onGallery={() => {
+            setShowActionSheet(false);
+            scanFromGallery();
+          }}
+          onManual={() => {
+            setShowActionSheet(false);
+            navigate('/add', { state: { date: selectedDate ?? today } });
+          }}
+          onClose={() => setShowActionSheet(false)}
+        />
+      )}
+
+      {(scanStatus === 'scanning' || scanStatus === 'processing') && (
+        <ScanningScreen status={scanStatus} />
+      )}
+
+      {scanStatus === 'done' && scanResult && (
+        <ReceiptResultSheet
+          parseResult={scanResult}
+          onConfirm={(edited) => {
+            navigate('/add', { state: { prefill: edited, date: selectedDate ?? today } });
+            resetScan();
+          }}
+          onClose={resetScan}
+        />
+      )}
+
+      {scanError?.type === 'permission_denied' && (
+        <PermissionGuide onClose={() => { resetScan(); setShowPermissionGuide(false); }} />
       )}
     </div>
   );
