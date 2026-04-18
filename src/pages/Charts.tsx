@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 import { useTransactions, useMembers, useCurrency } from '@/hooks/useStore';
 import { JARS } from '@/types';
-import { getJarColor } from '@/components/JarIcon';
 import { useTranslation } from 'react-i18next';
+import { filterByMember } from '@/lib/utils';
 
 export default function Charts() {
   const { transactions } = useTransactions();
@@ -12,9 +12,7 @@ export default function Charts() {
   const { t, i18n } = useTranslation();
   const [memberFilter, setMemberFilter] = useState('all');
 
-  const filtered = memberFilter === 'all'
-    ? transactions
-    : transactions.filter(t => t.memberId === memberFilter);
+  const filtered = filterByMember(transactions, memberFilter);
 
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -48,8 +46,8 @@ export default function Charts() {
   const totalExpense = pieData.reduce((s, d) => s + d.value, 0);
 
   return (
-    <div className="min-h-screen pb-24">
-      <div className="px-5 pt-14 pb-4 safe-top">
+    <div className="min-h-screen pb-safe">
+      <div className="px-5 pb-4 pt-safe">
         <h1 className="text-2xl font-bold">{t('charts.title')}</h1>
       </div>
 
@@ -58,7 +56,7 @@ export default function Charts() {
           <div className="flex gap-2 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setMemberFilter('all')}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium ${
+              className={`shrink-0 min-h-[40px] rounded-full px-4 py-2 text-sm font-medium ${
                 memberFilter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
               }`}
             >{t('history.all')}</button>
@@ -66,7 +64,7 @@ export default function Charts() {
               <button
                 key={m.id}
                 onClick={() => setMemberFilter(m.id)}
-                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium ${
+                className={`shrink-0 min-h-[40px] rounded-full px-4 py-2 text-sm font-medium ${
                   memberFilter === m.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
                 }`}
               >{m.name}</button>
@@ -113,8 +111,8 @@ export default function Charts() {
               <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip formatter={(value: number) => format(value)} />
-              <Bar dataKey="income" fill="#10B981" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="expense" fill="#EF4444" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="income" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="expense" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

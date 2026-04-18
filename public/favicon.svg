@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- jar body -->
+  <rect x="14" y="22" width="36" height="34" rx="8" fill="white" stroke="#d1d5db" stroke-width="2"/>
+  <!-- jar neck -->
+  <rect x="20" y="15" width="24" height="10" rx="4" fill="white" stroke="#d1d5db" stroke-width="2"/>
+  <!-- jar lid -->
+  <rect x="17" y="11" width="30" height="7" rx="3.5" fill="#6b7280"/>
+  <!-- shine -->
+  <ellipse cx="22" cy="33" rx="3" ry="7" fill="white" opacity="0.35"/>
+</svg>

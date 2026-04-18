@@ -1,77 +1,123 @@
-import { useState, useEffect, useCallback } from 'react';
-import * as db from '@/lib/db';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import * as localDb from '@/lib/db';
+import { useStorage } from '@/hooks/useStorage';
+import { supabase } from '@/lib/supabase';
 import type { Transaction, Budget, FamilyMember, JarBalance, JarId } from '@/types';
 
 export function useTransactions() {
+  const storage = useStorage();
+  const storageRef = useRef(storage);
+  storageRef.current = storage;
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    const data = await db.getAllTransactions();
+    const data = await storageRef.current.getAllTransactions();
     setTransactions(data.sort((a, b) => b.date.localeCompare(a.date)));
     setLoading(false);
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  /**
-   * Add a transaction.
-   * - Income: full amount auto-splits across all 5 jars by their allocationPct.
-   * - Expense: deducts the amount from the chosen jar.
-   */
-  const add = async (tx: Transaction) => {
-    await db.addTransaction(tx);
+  useEffect(() => {
+    const channel = supabase
+      .channel('transactions-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+        refresh();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refresh]);
 
+  const snapshotAllocations = (jars: JarBalance[]): Partial<Record<JarId, number>> => {
+    const snap: Partial<Record<JarId, number>> = {};
+    for (const j of jars) snap[j.id] = j.allocationPct;
+    return snap;
+  };
+
+  const applyIncomeSplit = async (tx: Transaction, sign: 1 | -1) => {
+    const jars = await storageRef.current.getAllJars();
+    const snap = tx.allocationSnapshot;
+    const pctFor = (id: JarId) =>
+      snap?.[id] ?? jars.find(j => j.id === id)?.allocationPct ?? 0;
+    const totalPct = jars.reduce((s, j) => s + pctFor(j.id), 0) || 100;
+    for (const j of jars) {
+      const share = tx.amount * (pctFor(j.id) / totalPct);
+      await storageRef.current.adjustJarBalance(j.id, sign * share);
+    }
+  };
+
+  const add = async (tx: Transaction) => {
     if (tx.type === 'income') {
-      const jars = await db.getAllJars();
-      const totalPct = jars.reduce((s, j) => s + j.allocationPct, 0) || 100;
-      for (const j of jars) {
-        const share = tx.amount * (j.allocationPct / totalPct);
-        await db.adjustJarBalance(j.id, share);
-      }
+      const jars = await storageRef.current.getAllJars();
+      const txWithSnap: Transaction = { ...tx, allocationSnapshot: snapshotAllocations(jars) };
+      await storageRef.current.addTransaction(txWithSnap);
+      await applyIncomeSplit(txWithSnap, 1);
     } else {
-      await db.adjustJarBalance(tx.jar, -tx.amount);
+      await storageRef.current.addTransaction(tx);
+      await storageRef.current.adjustJarBalance(tx.jar, -tx.amount);
     }
     await refresh();
   };
 
   const remove = async (id: string) => {
-    // Reverse jar effects
-    const tx = transactions.find(t => t.id === id);
+    const tx = await storageRef.current.getTransactionById(id);
     if (tx) {
       if (tx.type === 'income') {
-        const jars = await db.getAllJars();
-        const totalPct = jars.reduce((s, j) => s + j.allocationPct, 0) || 100;
-        for (const j of jars) {
-          await db.adjustJarBalance(j.id, -(tx.amount * (j.allocationPct / totalPct)));
-        }
+        await applyIncomeSplit(tx, -1);
       } else {
-        await db.adjustJarBalance(tx.jar, tx.amount);
+        await storageRef.current.adjustJarBalance(tx.jar, tx.amount);
       }
     }
-    await db.deleteTransaction(id);
+    await storageRef.current.deleteTransaction(id);
     await refresh();
   };
 
-  return { transactions, loading, add, remove, refresh };
+  const update = async (updated: Transaction) => {
+    const old = await storageRef.current.getTransactionById(updated.id);
+    if (!old) return;
+
+    if (old.type === 'income') {
+      await applyIncomeSplit(old, -1);
+    } else {
+      await storageRef.current.adjustJarBalance(old.jar, old.amount);
+    }
+
+    let toSave: Transaction = updated;
+    if (updated.type === 'income') {
+      const jars = await storageRef.current.getAllJars();
+      toSave = { ...updated, allocationSnapshot: snapshotAllocations(jars) };
+      await applyIncomeSplit(toSave, 1);
+    } else {
+      await storageRef.current.adjustJarBalance(updated.jar, -updated.amount);
+    }
+
+    await storageRef.current.updateTransaction(toSave);
+    await refresh();
+  };
+
+  return { transactions, loading, add, update, remove, refresh };
 }
 
 export function useBudgets() {
+  const storage = useStorage();
+  const storageRef = useRef(storage);
+  storageRef.current = storage;
   const [budgets, setBudgets] = useState<Budget[]>([]);
 
   const refresh = useCallback(async () => {
-    setBudgets(await db.getAllBudgets());
+    setBudgets(await storageRef.current.getAllBudgets());
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   const save = async (b: Budget) => {
-    await db.saveBudget(b);
+    await storageRef.current.saveBudget(b);
     await refresh();
   };
 
   const remove = async (id: string) => {
-    await db.deleteBudget(id);
+    await storageRef.current.deleteBudget(id);
     await refresh();
   };
 
@@ -79,32 +125,40 @@ export function useBudgets() {
 }
 
 export function useMembers() {
+  const storage = useStorage();
+  const storageRef = useRef(storage);
+  storageRef.current = storage;
   const [members, setMembers] = useState<FamilyMember[]>([]);
 
   const refresh = useCallback(async () => {
-    setMembers(await db.getAllMembers());
+    setMembers(await storageRef.current.getAllMembers());
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   const save = async (m: FamilyMember) => {
-    await db.saveMember(m);
+    await storageRef.current.saveMember(m);
     await refresh();
   };
 
   const remove = async (id: string) => {
-    await db.deleteMember(id);
+    await storageRef.current.deleteMember(id);
     await refresh();
   };
 
-  return { members, save, remove, refresh };
+  const getMemberName = (id: string) => members.find(m => m.id === id)?.name || '';
+
+  return { members, save, remove, refresh, getMemberName };
 }
 
 export function useJars() {
+  const storage = useStorage();
+  const storageRef = useRef(storage);
+  storageRef.current = storage;
   const [jars, setJars] = useState<JarBalance[]>([]);
 
   const refresh = useCallback(async () => {
-    setJars(await db.getAllJars());
+    setJars(await storageRef.current.getAllJars());
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
@@ -112,12 +166,12 @@ export function useJars() {
   const updateAllocation = async (id: JarId, pct: number) => {
     const j = jars.find(x => x.id === id);
     if (!j) return;
-    await db.saveJar({ ...j, allocationPct: pct });
+    await storageRef.current.saveJar({ ...j, allocationPct: pct });
     await refresh();
   };
 
   const reset = async () => {
-    await db.resetJarBalances();
+    await storageRef.current.resetJarBalances();
     await refresh();
   };
 
@@ -125,12 +179,19 @@ export function useJars() {
 }
 
 export function useCurrency() {
-  const [currency, setCurrencyState] = useState(() => {
-    return localStorage.getItem('currency') || 'JPY';
-  });
+  const [currency, setCurrencyState] = useState('JPY');
+  const [currencyLoading, setCurrencyLoading] = useState(true);
 
-  const setCurrency = (code: string) => {
-    localStorage.setItem('currency', code);
+  useEffect(() => {
+    localDb.getSetting('currency')
+      .then(val => {
+        if (val) setCurrencyState(val);
+      })
+      .finally(() => setCurrencyLoading(false));
+  }, []);
+
+  const setCurrency = async (code: string) => {
+    await localDb.setSetting('currency', code);
     setCurrencyState(code);
   };
 
@@ -143,5 +204,5 @@ export function useCurrency() {
     return `${symbol}${amount.toFixed(2)}`;
   };
 
-  return { currency, setCurrency, symbol, format };
+  return { currency, setCurrency, symbol, format, currencyLoading };
 }

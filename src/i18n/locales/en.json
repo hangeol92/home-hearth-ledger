@@ -5,7 +5,9 @@
     "history": "History",
     "budget": "Budget",
     "charts": "Charts",
-    "settings": "Settings"
+    "settings": "Settings",
+    "calendar": "Calendar",
+    "notifications": "Alerts"
   },
   "dashboard": {
     "balance": "Total Balance",
@@ -15,12 +17,29 @@
     "seeAll": "See all",
     "empty": "No transactions yet",
     "emptyHint": "Tap + to add your first one",
-    "yourJars": "Your Jars"
+    "yourJars": "Your Jars",
+    "thisMonth": "This Month",
+    "thisYear": "This Year",
+    "periodNet": "Period net"
   },
   "history": {
     "title": "History",
     "all": "All",
     "empty": "No transactions yet"
+  },
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirmDeleteTx": "Delete this transaction?",
+    "confirmDeleteTxDesc": "This will reverse the jar balance change. This action cannot be undone.",
+    "confirmDeleteMember": "Remove this member?",
+    "confirmDeleteMemberDesc": "Existing transactions assigned to this member will keep their member id."
+  },
+  "notFound": {
+    "title": "404",
+    "message": "Page not found",
+    "back": "Return to Home"
   },
   "budget": {
     "title": "Budget",
@@ -59,10 +78,25 @@
     "add": "Add member",
     "name": "Name",
     "addBtn": "Add",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "roleSection": "Add by role",
+    "customSection": "Custom members",
+    "roleName": "Name for this role",
+    "alreadyAdded": "Already added",
+    "roles": {
+      "dad": "Dad",
+      "mom": "Mom",
+      "son": "Son",
+      "daughter": "Daughter",
+      "grandfather": "Grandfather",
+      "grandmother": "Grandmother",
+      "boyfriend": "Boyfriend",
+      "girlfriend": "Girlfriend"
+    }
   },
   "add": {
     "title": "Add Transaction",
+    "editTitle": "Edit Transaction",
     "income": "Income",
     "expense": "Expense",
     "amount": "Amount",
@@ -73,6 +107,7 @@
     "notePlaceholder": "Optional note",
     "member": "Member",
     "save": "Save",
+    "update": "Update",
     "noMembers": "Add a family member first",
     "incomeHint": "Income auto-splits into all 5 jars by your allocation."
   },
@@ -87,6 +122,20 @@
     "savingsDesc": "Emergency & big purchases",
     "livingDesc": "Daily expenses",
     "seedDesc": "Opportunities & helping others"
+  },
+  "calendar": {
+    "income": "Income",
+    "expense": "Expense",
+    "balance": "Balance",
+    "noTransactions": "No transactions",
+    "addTransaction": "Add Transaction"
+  },
+  "memberSheet": {
+    "title": "Who's entering?",
+    "subtitle": "Select a member to continue",
+    "noMembers": "No members yet",
+    "noMembersHint": "Add members in Settings › Members",
+    "confirm": "Confirm"
   },
   "sub": {
     "Donation": "Donation",

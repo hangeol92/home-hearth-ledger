@@ -5,7 +5,9 @@
     "history": "내역",
     "budget": "예산",
     "charts": "차트",
-    "settings": "설정"
+    "settings": "설정",
+    "calendar": "달력",
+    "notifications": "알림"
   },
   "dashboard": {
     "balance": "총 잔액",
@@ -15,12 +17,29 @@
     "seeAll": "전체 보기",
     "empty": "거래 내역이 없습니다",
     "emptyHint": "＋ 버튼으로 추가하세요",
-    "yourJars": "내 항아리"
+    "yourJars": "내 항아리",
+    "thisMonth": "이번달",
+    "thisYear": "올해",
+    "periodNet": "기간 순수익"
   },
   "history": {
     "title": "내역",
     "all": "전체",
     "empty": "거래 내역이 없습니다"
+  },
+  "actions": {
+    "edit": "수정",
+    "delete": "삭제",
+    "cancel": "취소",
+    "confirmDeleteTx": "이 거래를 삭제할까요?",
+    "confirmDeleteTxDesc": "항아리 잔액이 원복됩니다. 이 작업은 되돌릴 수 없습니다.",
+    "confirmDeleteMember": "이 구성원을 삭제할까요?",
+    "confirmDeleteMemberDesc": "이 구성원에 연결된 기존 거래는 구성원 ID를 유지합니다."
+  },
+  "notFound": {
+    "title": "404",
+    "message": "페이지를 찾을 수 없습니다",
+    "back": "홈으로 돌아가기"
   },
   "budget": {
     "title": "예산",
@@ -59,10 +78,25 @@
     "add": "구성원 추가",
     "name": "이름",
     "addBtn": "추가",
-    "cancel": "취소"
+    "cancel": "취소",
+    "roleSection": "역할로 추가",
+    "customSection": "커스텀 멤버",
+    "roleName": "이름 입력",
+    "alreadyAdded": "이미 추가됨",
+    "roles": {
+      "dad": "아빠",
+      "mom": "엄마",
+      "son": "아들",
+      "daughter": "딸",
+      "grandfather": "할아버지",
+      "grandmother": "할머니",
+      "boyfriend": "남자친구",
+      "girlfriend": "여자친구"
+    }
   },
   "add": {
     "title": "거래 추가",
+    "editTitle": "거래 수정",
     "income": "수입",
     "expense": "지출",
     "amount": "금액",
@@ -73,6 +107,7 @@
     "notePlaceholder": "메모 (선택)",
     "member": "구성원",
     "save": "저장",
+    "update": "수정",
     "noMembers": "먼저 가족 구성원을 추가하세요",
     "incomeHint": "수입은 배분에 따라 다섯 항아리로 자동 분배됩니다."
   },
@@ -87,6 +122,20 @@
     "savingsDesc": "비상금과 큰 지출",
     "livingDesc": "일상 지출",
     "seedDesc": "기회와 돕기"
+  },
+  "calendar": {
+    "income": "입금",
+    "expense": "지출",
+    "balance": "잔액",
+    "noTransactions": "거래 내역이 없습니다",
+    "addTransaction": "가계부 등록"
+  },
+  "memberSheet": {
+    "title": "누가 입력하고 있나요?",
+    "subtitle": "멤버를 선택해주세요",
+    "noMembers": "등록된 멤버가 없습니다",
+    "noMembersHint": "설정 › 멤버에서 먼저 추가해주세요",
+    "confirm": "선택 완료"
   },
   "sub": {
     "Donation": "기부",

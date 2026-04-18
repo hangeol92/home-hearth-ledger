@@ -1,19 +1,165 @@
-import { useState } from 'react';
+import { useState, useRef, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTransactions, useMembers, useCurrency } from '@/hooks/useStore';
+import { JARS } from '@/types';
+import type { JarId } from '@/types';
 import { JarIcon } from '@/components/JarIcon';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getTxColorClass, filterByMember } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
+// ── Swipe row ──────────────────────────────────────────────────────────────
+const SNAP = 116; // width of action panel (px)
+
+function SwipeRow({
+  children,
+  onEdit,
+  onDelete,
+  editLabel,
+  deleteLabel,
+}: {
+  children: ReactNode;
+  onEdit: () => void;
+  onDelete: () => void;
+  editLabel: string;
+  deleteLabel: string;
+}) {
+  const [offset, setOffset] = useState(0);
+  const [animating, setAnimating] = useState(false);
+  const startX = useRef(0);
+  const startOff = useRef(0);
+  const moved = useRef(false);
+  const offsetRef = useRef(0);
+
+  const syncOffset = (v: number) => {
+    offsetRef.current = v;
+    setOffset(v);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    startX.current = e.clientX;
+    startOff.current = offsetRef.current;
+    moved.current = false;
+    setAnimating(false);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const dx = e.clientX - startX.current;
+    if (Math.abs(dx) > 4) moved.current = true;
+    const next = Math.max(-SNAP, Math.min(0, startOff.current + dx));
+    syncOffset(next);
+  };
+
+  const handlePointerUp = () => {
+    setAnimating(true);
+    syncOffset(offsetRef.current < -SNAP / 2 ? -SNAP : 0);
+  };
+
+  const handleContentClick = (e: React.MouseEvent) => {
+    if (moved.current) { e.stopPropagation(); return; }
+    if (offsetRef.current !== 0) { setAnimating(true); syncOffset(0); }
+  };
+
+  const closeAndRun = (fn: () => void) => {
+    setAnimating(true);
+    syncOffset(0);
+    fn();
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-xl shadow-sm mb-2">
+      {/* action panel — revealed on swipe left */}
+      <div
+        className="absolute inset-y-0 right-0 flex"
+        style={{ width: SNAP }}
+      >
+        <button
+          className="flex flex-1 flex-col items-center justify-center gap-0.5 bg-blue-500 text-white"
+          onClick={() => closeAndRun(onEdit)}
+        >
+          <Pencil className="h-4 w-4" />
+          <span className="text-[10px] font-medium">{editLabel}</span>
+        </button>
+        <button
+          className="flex flex-1 flex-col items-center justify-center gap-0.5 bg-destructive text-destructive-foreground"
+          onClick={() => closeAndRun(onDelete)}
+        >
+          <Trash2 className="h-4 w-4" />
+          <span className="text-[10px] font-medium">{deleteLabel}</span>
+        </button>
+      </div>
+
+      {/* sliding content */}
+      <div
+        className="relative z-10 bg-card"
+        style={{
+          transform: `translateX(${offset}px)`,
+          transition: animating ? 'transform 0.22s ease' : 'none',
+          touchAction: 'pan-y',
+          userSelect: 'none',
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onClick={handleContentClick}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ── Month helpers ──────────────────────────────────────────────────────────
+function toYearMonth(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function shiftMonth(ym: string, delta: number) {
+  const [y, m] = ym.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return toYearMonth(d);
+}
+
+// ── Main page ──────────────────────────────────────────────────────────────
 export default function History() {
+  const navigate = useNavigate();
   const { transactions, remove } = useTransactions();
-  const { members } = useMembers();
+  const { members, getMemberName } = useMembers();
   const { format } = useCurrency();
   const { t, i18n } = useTranslation();
-  const [filter, setFilter] = useState<string>('all');
 
-  const filtered = filter === 'all'
-    ? transactions
-    : transactions.filter(t => t.memberId === filter);
+  const [filterMember, setFilterMember] = useState('all');
+  const [filterJar, setFilterJar] = useState<'all' | JarId>('all');
+  const [viewMonth, setViewMonth] = useState(toYearMonth(new Date()));
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const confirmDelete = async () => {
+    if (pendingDeleteId) await remove(pendingDeleteId);
+    setPendingDeleteId(null);
+  };
+
+  // Determine oldest available month to prevent navigating too far back
+  const oldestMonth = transactions.length
+    ? transactions.reduce((min, tx) => (tx.date < min ? tx.date : min), transactions[0].date).slice(0, 7)
+    : viewMonth;
+
+  // Income auto-splits across all jars, so a single-jar filter shouldn't
+  // include it (otherwise income shows up under whatever jar id was set,
+  // historically 'living'). Expenses filter by their explicit jar.
+  const filtered = filterByMember(transactions, filterMember)
+    .filter(tx => filterJar === 'all' || (tx.type === 'expense' && tx.jar === filterJar))
+    .filter(tx => tx.date.startsWith(viewMonth));
 
   const grouped = filtered.reduce<Record<string, typeof transactions>>((acc, tx) => {
     const month = tx.date.slice(0, 7);
@@ -22,21 +168,51 @@ export default function History() {
     return acc;
   }, {});
 
-  const getMemberName = (id: string) => members.find(m => m.id === id)?.name || '';
+  const monthLabel = new Date(viewMonth + '-02').toLocaleDateString(i18n.language, {
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
-    <div className="min-h-screen pb-24">
-      <div className="px-5 pt-14 pb-4 safe-top">
+    <div className="min-h-screen pb-safe">
+      {/* Header */}
+      <div className="px-5 pb-3 pt-safe">
         <h1 className="text-2xl font-bold">{t('history.title')}</h1>
       </div>
 
+      {/* Month navigator */}
+      <div className="px-5 pb-3">
+        <div className="flex items-center justify-between rounded-xl bg-secondary px-1 py-1">
+          <button
+            onClick={() => setViewMonth(v => shiftMonth(v, -1))}
+            disabled={viewMonth <= oldestMonth}
+            className="flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30 active:bg-black/10"
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <span className="text-sm font-semibold">{monthLabel}</span>
+          <button
+            onClick={() => setViewMonth(v => shiftMonth(v, 1))}
+            disabled={viewMonth >= toYearMonth(new Date())}
+            className="flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30 active:bg-black/10"
+            aria-label="Next month"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Member filter */}
       {members.length > 0 && (
-        <div className="px-5 pb-4">
+        <div className="px-5 pb-2">
           <div className="flex gap-2 overflow-x-auto no-scrollbar">
             <button
-              onClick={() => setFilter('all')}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium ${
-                filter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+              onClick={() => setFilterMember('all')}
+              className={`shrink-0 min-h-[40px] rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                filterMember === 'all'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-secondary-foreground'
               }`}
             >
               {t('history.all')}
@@ -44,9 +220,11 @@ export default function History() {
             {members.map(m => (
               <button
                 key={m.id}
-                onClick={() => setFilter(m.id)}
-                className={`shrink-0 flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium ${
-                  filter === m.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                onClick={() => setFilterMember(m.id)}
+                className={`shrink-0 flex min-h-[40px] items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  filterMember === m.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-secondary-foreground'
                 }`}
               >
                 <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: m.color }} />
@@ -57,38 +235,107 @@ export default function History() {
         </div>
       )}
 
+      {/* Jar filter */}
+      <div className="px-5 pb-4">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => setFilterJar('all')}
+            className={`shrink-0 min-h-[40px] rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              filterJar === 'all'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-secondary text-secondary-foreground'
+            }`}
+          >
+            {t('history.all')}
+          </button>
+          {JARS.map(j => (
+            <button
+              key={j.id}
+              onClick={() => setFilterJar(filterJar === j.id ? 'all' : j.id)}
+              className="shrink-0 flex min-h-[40px] items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              style={
+                filterJar === j.id
+                  ? { backgroundColor: j.color, color: '#fff' }
+                  : { backgroundColor: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))' }
+              }
+            >
+              <JarIcon jar={j.id} size={13} />
+              {t(`jars.${j.id}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!pendingDeleteId} onOpenChange={open => { if (!open) setPendingDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('actions.confirmDeleteTx')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('actions.confirmDeleteTxDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {t('actions.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Transaction list */}
       <div className="px-5">
         {Object.keys(grouped).length === 0 ? (
-          <p className="text-center text-muted-foreground py-12 text-sm">{t('history.empty')}</p>
+          <div className="py-12 text-center text-muted-foreground">
+            <p className="text-sm">{t('history.empty')}</p>
+          </div>
         ) : (
-          Object.entries(grouped).map(([month, txs]) => (
-            <div key={month} className="mb-6">
-              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase">
-                {new Date(month + '-01').toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' })}
-              </p>
-              <div className="space-y-2">
+          Object.entries(grouped).map(([month, txs]) => {
+            const monthIncome = txs.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
+            const monthExpense = txs.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
+            return (
+              <div key={month} className="mb-6">
+                {/* Month header with summary */}
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">
+                    {new Date(month + '-02').toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' })}
+                  </p>
+                  <div className="flex gap-3 text-xs">
+                    {monthIncome > 0 && (
+                      <span className="text-green-600 font-medium">+{format(monthIncome)}</span>
+                    )}
+                    {monthExpense > 0 && (
+                      <span className="text-red-500 font-medium">-{format(monthExpense)}</span>
+                    )}
+                  </div>
+                </div>
+
                 {txs.map(tx => (
-                  <div key={tx.id} className="flex items-center gap-3 rounded-xl bg-card p-3 shadow-sm">
-                    <JarIcon jar={tx.jar} size={18} />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">
-                        {t(`jars.${tx.jar}`)} · {String(t(`sub.${tx.subCategory}`, { defaultValue: tx.subCategory }))}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {tx.date.slice(5)} · {tx.note || getMemberName(tx.memberId)}
+                  <SwipeRow
+                    key={tx.id}
+                    onEdit={() => navigate(`/edit/${tx.id}`)}
+                    onDelete={() => setPendingDeleteId(tx.id)}
+                    editLabel={t('actions.edit')}
+                    deleteLabel={t('actions.delete')}
+                  >
+                    <div className="flex items-center gap-3 p-3">
+                      <JarIcon jar={tx.jar} size={18} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">
+                          {t(`jars.${tx.jar}`)} · {String(t(`sub.${tx.subCategory}`, { defaultValue: tx.subCategory }))}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {tx.date.slice(5)} · {tx.note || getMemberName(tx.memberId)}
+                        </p>
+                      </div>
+                      <p className={`font-semibold text-sm ${getTxColorClass(tx.type)}`}>
+                        {tx.type === 'income' ? '+' : '-'}{format(tx.amount)}
                       </p>
                     </div>
-                    <p className={`font-semibold text-sm ${tx.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
-                      {tx.type === 'income' ? '+' : '-'}{format(tx.amount)}
-                    </p>
-                    <button onClick={() => remove(tx.id)} className="p-1 text-muted-foreground hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+                  </SwipeRow>
                 ))}
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

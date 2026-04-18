@@ -64,7 +64,17 @@
   }
 }
 
-/* Safe area for iOS notch */
+/* Safe area for iOS notch.
+   pt-safe / pb-safe stack the inset on top of any Tailwind padding via !important
+   so they win the cascade and remain additive. */
+.pt-safe {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 3.5rem) !important;
+}
+
+.pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6rem) !important;
+}
+
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -72,3 +82,7 @@
 .safe-top {
   padding-top: env(safe-area-inset-top, 0px);
 }
+
+/* Hide horizontal scrollbar on filter chip rows */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }

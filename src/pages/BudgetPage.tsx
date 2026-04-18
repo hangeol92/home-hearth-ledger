@@ -44,8 +44,8 @@ export default function BudgetPage() {
   const availableJars = JARS.filter(j => !usedJars.includes(j.id));
 
   return (
-    <div className="min-h-screen pb-24">
-      <div className="px-5 pt-14 pb-4 safe-top">
+    <div className="min-h-screen pb-safe">
+      <div className="px-5 pb-4 pt-safe">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t('budget.title')}</h1>
           <p className="text-sm text-muted-foreground">
@@ -63,8 +63,8 @@ export default function BudgetPage() {
 
         {monthBudgets.map(b => {
           const spent = getSpent(b.jar);
-          const pct = Math.min((spent / b.amount) * 100, 100);
-          const over = spent > b.amount;
+          const pct = b.amount === 0 ? 0 : Math.min((spent / b.amount) * 100, 100);
+          const over = b.amount > 0 && spent > b.amount;
           return (
             <div key={b.id} className="rounded-xl bg-card p-4 shadow-sm">
               <div className="flex items-center gap-3 mb-3">
@@ -75,8 +75,12 @@ export default function BudgetPage() {
                     {format(spent)} / {format(b.amount)}
                   </p>
                 </div>
-                <button onClick={() => remove(b.id)} className="p-1 text-muted-foreground">
-                  <X className="h-4 w-4" />
+                <button
+                  onClick={() => remove(b.id)}
+                  className="flex h-11 w-11 items-center justify-center text-muted-foreground"
+                  aria-label="Remove budget"
+                >
+                  <X className="h-5 w-5" />
                 </button>
               </div>
               <Progress value={pct} className={`h-2 ${over ? '[&>div]:bg-destructive' : '[&>div]:bg-primary'}`} />
@@ -96,7 +100,7 @@ export default function BudgetPage() {
                 <button
                   key={j.id}
                   onClick={() => setNewJar(j.id)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                  className={`min-h-[40px] rounded-full px-4 py-2 text-sm font-medium ${
                     newJar === j.id ? 'text-primary-foreground' : 'bg-secondary text-secondary-foreground'
                   }`}
                   style={newJar === j.id ? { backgroundColor: j.color } : undefined}
@@ -112,6 +116,7 @@ export default function BudgetPage() {
               onChange={e => setNewAmount(e.target.value)}
               className="rounded-xl"
               inputMode="decimal"
+              min="0"
             />
             <div className="flex gap-2">
               <Button onClick={handleAdd} size="sm" className="rounded-xl" disabled={!newAmount}>{t('budget.save')}</Button>

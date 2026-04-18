@@ -5,7 +5,9 @@
     "history": "履歴",
     "budget": "予算",
     "charts": "グラフ",
-    "settings": "設定"
+    "settings": "設定",
+    "calendar": "カレンダー",
+    "notifications": "通知"
   },
   "dashboard": {
     "balance": "総残高",
@@ -15,12 +17,29 @@
     "seeAll": "すべて見る",
     "empty": "取引がありません",
     "emptyHint": "＋ボタンで追加してください",
-    "yourJars": "あなたの壺"
+    "yourJars": "あなたの壺",
+    "thisMonth": "今月",
+    "thisYear": "今年",
+    "periodNet": "期間純収益"
   },
   "history": {
     "title": "履歴",
     "all": "すべて",
     "empty": "取引がありません"
+  },
+  "actions": {
+    "edit": "編集",
+    "delete": "削除",
+    "cancel": "キャンセル",
+    "confirmDeleteTx": "この取引を削除しますか？",
+    "confirmDeleteTxDesc": "壺の残高変更が元に戻されます。この操作は取り消せません。",
+    "confirmDeleteMember": "このメンバーを削除しますか？",
+    "confirmDeleteMemberDesc": "このメンバーに紐づいた既存の取引はメンバーIDを保持します。"
+  },
+  "notFound": {
+    "title": "404",
+    "message": "ページが見つかりません",
+    "back": "ホームに戻る"
   },
   "budget": {
     "title": "予算",
@@ -59,10 +78,25 @@
     "add": "メンバーを追加",
     "name": "名前",
     "addBtn": "追加",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "roleSection": "役割で追加",
+    "customSection": "カスタムメンバー",
+    "roleName": "名前を入力",
+    "alreadyAdded": "追加済み",
+    "roles": {
+      "dad": "パパ",
+      "mom": "ママ",
+      "son": "息子",
+      "daughter": "娘",
+      "grandfather": "おじいちゃん",
+      "grandmother": "おばあちゃん",
+      "boyfriend": "彼氏",
+      "girlfriend": "彼女"
+    }
   },
   "add": {
     "title": "取引を追加",
+    "editTitle": "取引を編集",
     "income": "収入",
     "expense": "支出",
     "amount": "金額",
@@ -73,6 +107,7 @@
     "notePlaceholder": "メモ（任意）",
     "member": "メンバー",
     "save": "保存",
+    "update": "更新",
     "noMembers": "先に家族メンバーを追加してください",
     "incomeHint": "収入は配分に従って5つの壺に自動振り分けされます。"
   },
@@ -87,6 +122,20 @@
     "savingsDesc": "緊急時・大きな買い物",
     "livingDesc": "日々の支出",
     "seedDesc": "機会・人助け"
+  },
+  "calendar": {
+    "income": "入金",
+    "expense": "支出",
+    "balance": "残高",
+    "noTransactions": "取引がありません",
+    "addTransaction": "取引を追加"
+  },
+  "memberSheet": {
+    "title": "誰が入力していますか？",
+    "subtitle": "メンバーを選択してください",
+    "noMembers": "メンバーがいません",
+    "noMembersHint": "設定 › メンバーから追加してください",
+    "confirm": "選択完了"
   },
   "sub": {
     "Donation": "寄付",

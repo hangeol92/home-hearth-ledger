@@ -21,10 +21,14 @@ interface AccountBookDB extends DBSchema {
     key: JarId;
     value: JarBalance;
   };
+  settings: {
+    key: string;
+    value: { key: string; value: string };
+  };
 }
 
 const DB_NAME = 'household-account-book';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 export async function getDB() {
   return openDB<AccountBookDB>(DB_NAME, DB_VERSION, {
@@ -74,6 +78,17 @@ export async function getDB() {
           }
         }
       }
+
+      if (oldVersion < 3) {
+        db.createObjectStore('settings', { keyPath: 'key' });
+        // Migrate currency from localStorage if present
+        const saved = localStorage.getItem('currency');
+        if (saved) {
+          const sStore = tx.objectStore('settings');
+          await sStore.put({ key: 'currency', value: saved });
+          localStorage.removeItem('currency');
+        }
+      }
     },
   });
 }
@@ -84,7 +99,17 @@ export async function getAllTransactions(): Promise<Transaction[]> {
   return db.getAll('transactions');
 }
 
+export async function getTransactionById(id: string): Promise<Transaction | undefined> {
+  const db = await getDB();
+  return db.get('transactions', id);
+}
+
 export async function addTransaction(tx: Transaction) {
+  const db = await getDB();
+  await db.put('transactions', tx);
+}
+
+export async function updateTransaction(tx: Transaction) {
   const db = await getDB();
   await db.put('transactions', tx);
 }
@@ -147,10 +172,11 @@ export async function saveJar(jar: JarBalance) {
 export async function adjustJarBalance(id: JarId, delta: number) {
   const db = await getDB();
   const j = await db.get('jars', id);
-  if (j) {
-    j.balance += delta;
-    await db.put('jars', j);
+  if (!j) {
+    throw new Error(`adjustJarBalance: jar "${id}" not found`);
   }
+  j.balance += delta;
+  await db.put('jars', j);
 }
 
 export async function resetJarBalances() {
@@ -162,6 +188,18 @@ export async function resetJarBalances() {
   }
 }
 
+// Settings
+export async function getSetting(key: string): Promise<string | undefined> {
+  const db = await getDB();
+  const row = await db.get('settings', key);
+  return row?.value;
+}
+
+export async function setSetting(key: string, value: string) {
+  const db = await getDB();
+  await db.put('settings', { key, value });
+}
+
 // Clear all
 export async function clearAllData() {
   const db = await getDB();
@@ -169,4 +207,5 @@ export async function clearAllData() {
   await db.clear('budgets');
   await db.clear('members');
   await db.clear('jars');
+  await db.clear('settings');
 }
