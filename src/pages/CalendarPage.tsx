@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCalendar } from '@/hooks/useCalendar';
 import { useJars, useCurrency, useMembers } from '@/hooks/useStore';
 import { JarIcon } from '@/components/JarIcon';
@@ -12,6 +12,7 @@ import ScanActionSheet from '@/components/receipt/ScanActionSheet';
 import ScanningScreen from '@/components/receipt/ScanningScreen';
 import ReceiptResultSheet from '@/components/receipt/ReceiptResultSheet';
 import PermissionGuide from '@/components/receipt/PermissionGuide';
+import { useToast } from '@/hooks/use-toast';
 
 function getWeekdays(locale: string) {
   return Array.from({ length: 7 }, (_, i) => {
@@ -29,7 +30,17 @@ export default function CalendarPage() {
   const { activeMember, setActiveMember } = useActiveMember();
   const [showMemberSheet, setShowMemberSheet] = useState(false);
   const [showActionSheet, setShowActionSheet] = useState(false);
+  const { toast } = useToast();
   const { status: scanStatus, result: scanResult, error: scanError, scanFromCamera, scanFromGallery, reset: resetScan } = useReceiptScanner();
+
+  useEffect(() => {
+    if (scanStatus === 'error' && scanError && scanError.type !== 'permission_denied') {
+      const msg = scanError.type === 'ocr_failed' ? t('receipt.ocrFailed') : t('receipt.webOnly');
+      toast({ description: msg, variant: 'destructive', duration: 3000 });
+      resetScan();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scanStatus, scanError]);
   const {
     year, month, selectedDate,
     totalIncome, totalExpense,
@@ -228,8 +239,8 @@ export default function CalendarPage() {
         />
       )}
 
-      {scanError?.type === 'permission_denied' && (
-        <PermissionGuide onClose={() => { resetScan(); setShowPermissionGuide(false); }} />
+      {scanStatus === 'error' && scanError?.type === 'permission_denied' && (
+        <PermissionGuide onClose={resetScan} />
       )}
     </div>
   );
