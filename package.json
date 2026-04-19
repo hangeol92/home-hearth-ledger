@@ -24,6 +24,7 @@
     "@capacitor/cli": "^7.6.2",
     "@capacitor/core": "^7.6.2",
     "@capacitor/ios": "^7.6.2",
+    "@capacitor/status-bar": "^7.0.1",
     "@pantrist/capacitor-plugin-ml-kit-text-recognition": "^8.0.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",

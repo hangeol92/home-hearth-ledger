@@ -64,7 +64,8 @@
   }
 }
 
-/* Global safe area — pushes ALL content below notch/Dynamic Island */
+/* Safe area: contentInset=always means the OS auto-insets scroll content.
+   #root padding ensures non-scroll layouts also respect the notch. */
 #root {
   padding-top: env(safe-area-inset-top, 0px);
 }
