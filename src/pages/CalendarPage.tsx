@@ -35,7 +35,7 @@ export default function CalendarPage() {
 
   useEffect(() => {
     if (scanStatus === 'error' && scanError && scanError.type !== 'permission_denied') {
-      const msg = scanError.type === 'ocr_failed' ? t('receipt.ocrFailed') : t('receipt.webOnly');
+      const msg = scanError.type === 'web_only' ? t('receipt.webOnly') : t('receipt.ocrFailed');
       toast({ description: msg, variant: 'destructive', duration: 3000 });
       resetScan();
     }

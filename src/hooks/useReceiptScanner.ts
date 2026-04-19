@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { parseReceipt, type ReceiptParseResult } from '@/utils/receiptParser';
 
 type ScanStatus = 'idle' | 'scanning' | 'processing' | 'done' | 'error';
-type ScanErrorType = 'permission_denied' | 'cancelled' | 'ocr_failed' | 'unknown';
+type ScanErrorType = 'permission_denied' | 'cancelled' | 'ocr_failed' | 'web_only' | 'unknown';
 
 interface ScanError {
   type: ScanErrorType;
@@ -43,7 +43,7 @@ export function useReceiptScanner() {
       .Capacitor?.isNativePlatform === 'function' &&
       (window as Window & { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor!.isNativePlatform!();
     if (!isNative) {
-      setError({ type: 'ocr_failed', message: 'Receipt scanning is only supported in the mobile app.' });
+      setError({ type: 'web_only', message: 'Receipt scanning is only supported in the mobile app.' });
       setStatus('error');
       return;
     }
