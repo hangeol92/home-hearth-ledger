@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
 
   ios: {
-    contentInset: 'always',       // respect safe-area on notch/Dynamic Island
+    contentInset: 'never',
     backgroundColor: '#ffffff',
     scheme: 'fivejars',
   },

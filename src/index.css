@@ -64,11 +64,14 @@
   }
 }
 
-/* Safe area for iOS notch.
-   pt-safe / pb-safe stack the inset on top of any Tailwind padding via !important
-   so they win the cascade and remain additive. */
+/* Global safe area — pushes ALL content below notch/Dynamic Island */
+#root {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* pt-safe: extra header padding on top of the global safe-area offset */
 .pt-safe {
-  padding-top: calc(env(safe-area-inset-top, 0px) + 3.5rem) !important;
+  padding-top: 3.5rem !important;
 }
 
 .pb-safe {
@@ -80,7 +83,7 @@
 }
 
 .safe-top {
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: 0px;
 }
 
 /* Hide horizontal scrollbar on filter chip rows */
