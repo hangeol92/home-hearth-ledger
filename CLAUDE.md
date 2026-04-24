@@ -1,166 +1,117 @@
-# Home Hearth Ledger — 에이전트 팀 운영 규칙
+# Home Hearth Ledger — CLAUDE.md
 
-## 팀 구조
-이 프로젝트는 오케스트레이터 1명 + 팀원 3명으로 운영됩니다.
+## 프로젝트 개요
+가족 가계부 앱. React + TypeScript + Vite + Capacitor (iOS/Android).  
+비회원(IndexedDB)과 회원(Supabase) 모두 지원. 모바일 375px 기준, iOS 스타일 UI.
 
-- **orchestrator** — 기획 · 작업 분배 · 최종 검수
-- **senior-dev** — 기능 구현 · 리팩터링 · Capacitor 빌드
-- **lead-designer** — iOS 스타일 UI · 컴포넌트 디자인 시스템
-- **qa-tester** — 테스트 · 버그 리포트 · 품질 검증
-
-## 소통 규칙
-
-### 오케스트레이터가 할 일
-1. 요구사항을 받으면 3명에게 작업을 분배한다
-2. 각 팀원의 완료 보고를 받아 종합한다
-3. 충돌이 생기면 최종 결정을 내린다
-4. 완료 기준(Definition of Done)을 명확히 제시한다
-
-### 팀원이 할 일
-- 작업 시작 전: 오케스트레이터에게 착수 보고
-- 작업 중 블로킹 상황: 즉시 오케스트레이터에게 메시지
-- 완료 시: 결과물 요약 + 다음 필요한 것을 보고
-- 다른 팀원과 관련된 결정: 직접 메시지 후 오케스트레이터에게 CC
-
-### 파일 소유권 (충돌 방지)
-- senior-dev: src/db/, src/api/, src/hooks/, src/pages/, capacitor.config.ts
-- lead-designer: src/components/, src/styles/, public/assets/
-- qa-tester: src/tests/, src/__tests__/, 버그 리포트는 BUGS.md에 작성
+## 커맨드
+```bash
+npm run dev          # 개발 서버 (port 8080)
+npm run build        # 프로덕션 빌드
+npm run lint         # ESLint
+npm run test         # Vitest 단발 실행
+npx cap sync ios     # 빌드 후 iOS 동기화
+```
 
 ## 기술 스택
-- React + TypeScript + Vite
-- IndexedDB (idb 라이브러리) — 비회원 로컬 저장
-- Supabase — 회원 클라우드 저장 및 동기화
-- Recharts (차트)
-- Capacitor (iOS/Android 빌드)
-- 모바일 375px 기준, iOS 스타일 UI
-
-## 완료 기준 (Definition of Done)
-- [ ] senior-dev: 기능 구현 + 빌드 오류 없음
-- [ ] lead-designer: 375px에서 UI 검토 완료
-- [ ] qa-tester: 주요 시나리오 테스트 통과 + BUGS.md 업데이트
-- [ ] orchestrator: 세 팀원 보고 수렴 후 최종 승인
+- React 18 + TypeScript, Vite, Tailwind CSS, shadcn/ui (Radix UI)
+- React Hook Form + Zod, TanStack Query, React Router v6
+- IndexedDB (idb) — 비회원 로컬 저장
+- Supabase — 회원 클라우드 저장 및 실시간 동기화
+- Capacitor 7.x (iOS/Android 빌드)
+- i18next — 한국어/영어/일본어 (`src/i18n/locales/`)
 
 ---
 
-## 핵심 원칙: 비회원도 앱을 완전히 사용할 수 있어야 한다
+## 아키텍처
 
-### 사용자 유형별 동작
+### 데이터 레이어
+- `src/lib/db.ts` — IndexedDB 래퍼. 4개 오브젝트 스토어: `transactions`, `budgets`, `members`, `jars`
+- `src/hooks/useStorage.ts` — 로그인 상태에 따라 IndexedDB 또는 Supabase 자동 선택
+- `src/hooks/useStore.ts` — `useTransactions`, `useBudgets`, `useMembers`, `useJars`, `useCurrency` 훅 제공. **db.ts를 직접 호출하는 유일한 레이어**
+
+### 라우팅
+- 페이지 컴포넌트는 `src/pages/`에 위치, `src/App.tsx`의 라우트와 1:1 대응
+- 하단 탭: 홈(`/`) / 내역(`/history`) / 달력(`/calendar`) / 알림 / 壺(`/jars`)
+- 설정 하위 페이지: `/settings/jars`, `/settings/utility`, `/settings/language`, `/settings/currency`, `/settings/help`
+
+### 핵심 도메인 — Five Jars 시스템
+- 수입 거래: 5개 壺(giving/investing/savings/living/seed)에 설정 비율로 자동 분배
+- 지출 거래: 특정 壺에서 차감
+- 壺 잔액 변경은 반드시 `useStore.ts`의 훅을 통해서만 수행
+
+---
+
+## 거래 등록 (AddTransaction.tsx)
+
+### 지출 카테고리 구조
+- **壺 선택** → 壺가 `living`이면 2단계 카테고리, 나머지는 1단계
+- **생활비(living) 2단계**: 대분류(`LivingMainCategory`, 11개) → 세부항목
+  - 대분류: `LIVING_MAIN_CATEGORY_ICONS` (types/index.ts)
+  - 세부항목: `LIVING_SUBCATEGORIES` (types/index.ts)
+- **그 외 壺**: `JAR_SUBCATEGORIES[jar]` 사용
+
+### 수입 카테고리
+- `INCOME_MAIN_CATEGORIES = ['Salary', 'Bonus', 'Asset Adjustment', 'Other']`
+- 수입 거래는 `jar: undefined`로 저장됨 — **표시 시 `t('jars.undefined')` 방지 필요**
+  - Dashboard, History에서 `tx.type === 'income'`이면 `t('incomeCat.${tx.subCategory}')` 사용
+
+### 커스텀 카테고리
+- `src/hooks/useCustomCategories.ts` — localStorage에 저장 (`hhl_custom_main_cats`, `hhl_custom_sub_cats`)
+- 대분류와 세부항목 모두 유저가 직접 추가 가능
+- 이모지 선택 UI: `CATEGORY_EMOJI_OPTIONS` (types/index.ts, 96개)
+
+### iOS 주의사항
+- 숫자 입력 필드: `type="text" inputMode="decimal" pattern="[0-9]*"` 사용 (`type="number"`는 WKWebView에서 키보드 미표시)
+- JARS.find() 결과에 `!` 단언 금지 → `?? JARS[0]` fallback 사용 (비정상 jar id로 크래시 방지)
+
+---
+
+## i18n 키 네임스페이스
+| 키 | 용도 |
+|----|------|
+| `jars.*` | 壺 이름 (giving/investing/savings/living/seed) |
+| `mainCat.*` | 생활비 대분류 (Food/Transport/…/Other) |
+| `livingSub.*` | 생활비 세부항목 |
+| `incomeCat.*` | 수입 대분류 (Salary/Bonus/Asset Adjustment/Other) |
+| `sub.*` | 비생활비 壺 세부항목 |
+
+---
+
+## 사용자 유형별 동작
 
 | 구분 | 저장 위치 | 공유 가계부 | 데이터 백업 |
 |------|-----------|------------|------------|
 | 비회원 (게스트) | 기기 내 IndexedDB | 불가 | 불가 |
-| 회원 (로그인) | Supabase 클라우드 | 가능 | 가능 (기기 교체 시 복원) |
+| 회원 (로그인) | Supabase 클라우드 | 가능 | 가능 |
 
-### 앱 최초 실행 흐름
-1. 앱 실행 → 로그인/회원가입 화면 없이 바로 앱 진입
-2. 게스트 상태로 모든 기본 기능 사용 가능
-3. 공유 기능 또는 백업 기능 접근 시 → 회원가입 유도 안내 표시
-4. 언제든 설정에서 회원가입 / 로그인 가능
-
----
+- 앱 실행 시 로그인 화면 없이 바로 진입 (게스트 모드)
+- 공유/백업 기능 접근 시 회원가입 유도
+- 게스트 → 회원 전환 시 IndexedDB 데이터를 Supabase로 마이그레이션
 
 ## 인증 시스템
+- 이메일 + 비밀번호 (Supabase Auth)
+- Google 소셜 로그인 미구현
+- 가입 시 닉네임, 생년월일, 국가 추가 입력 필요
 
-### 회원가입
-- 이메일 + 비밀번호 방식
-- 이메일 인증 필수 (Supabase Auth 이메일 인증 사용)
-- 가입 시 추가 정보 입력:
-  - 닉네임 (필수)
-  - 생년월일 (필수)
-  - 국가 (필수, 드롭다운)
-- Google 소셜 로그인은 구현하지 않음
-
-### 로그인
-- 이메일 + 비밀번호
-- 로그인 상태 유지 (Supabase 세션 자동 관리)
-- 로그아웃 시 게스트 모드로 전환 (로컬 데이터 유지)
-
-### 게스트 → 회원 전환
-- 회원가입 완료 시 기기 내 IndexedDB 데이터를 Supabase로 마이그레이션
-- 기존 로컬 데이터 손실 없이 클라우드로 이전
+## Supabase 스키마
+- `profiles`: 사용자 계정 (닉네임, 생년월일, 국가)
+- `households`: 가구 단위 (6자리 초대 코드로 멤버 초대)
+- `members`: 가족 구성원
+- `transactions`: 수입/지출 내역
+- `settings`: 사용자별 앱 설정
 
 ---
 
-## 클라우드 동기화 (회원 전용)
+## 주요 컴포넌트
+- `src/components/ErrorBoundary.tsx` — 앱 전체를 감싸 흰 화면 방지
+- `src/components/SubscriptionProvider.tsx` — 구독 상태 Context 제공
+- `src/components/ads/AdBanner.tsx` — 광고 배너. CSS 변수 `--ad-banner-height` 설정
+- `src/components/paywall/PaywallSheet.tsx` — 프리미엄 업그레이드 시트
+- `src/components/JarIcon.tsx` — `getJarDef(id)` 반드시 `?? JARS[0]` fallback 유지
 
-### Supabase 스키마
-- profiles: 사용자 계정 (닉네임, 생년월일, 국가)
-- households: 가구 단위 (공유 코드로 멤버 초대)
-- members: 가족 구성원 (household에 소속)
-- transactions: 수입/지출 내역
-- settings: 사용자별 앱 설정
-
-### 공유 가계부 (회원 전용)
-- 6자리 초대 코드로 household 공유
-- 실시간 동기화 (Supabase Realtime)
-- 멤버별 권한: owner / member
-
-### 데이터 저장 레이어
-- 비회원: src/db/ (IndexedDB, idb 라이브러리)
-- 회원: src/api/ (Supabase API)
-- src/hooks/useStorage.ts — 로그인 상태에 따라 자동으로 적절한 레이어 선택
-
----
-
-## 신규 작업: 달력 페이지 추가
-
-### 변경사항
-- 하단 탭 순서: 홈 / 내역 / 달력 / 알림 / 더보기
-
-### 달력 페이지 스펙
-1. **상단 헤더**
-   - 좌: 년/월 드롭다운 (예: 2026년 4월 ∨)
-   - 우: 검색 / 필터 / + 추가 버튼
-
-2. **요약 카드** (헤더 바로 아래)
-   - 입금 / 지출 / 잔액 3열 구성
-
-3. **달력 본체**
-   - 일~토 7열 그리드
-   - 각 날짜 아래 해당일 지출 합계 금액 표시 (빨간색)
-   - 오늘 날짜는 검정 원으로 강조
-   - 거래 없는 날은 금액 미표시
-   - 일요일 날짜는 회색 처리
-
-4. **날짜 클릭 시**
-   - 하단에 해당일 거래 내역 리스트 표시
-   - 각 항목: 카테고리 아이콘 / 멤버 태그 / 금액
-
-5. **하단 플로팅 버튼**
-   - "가계부 등록" 검정 버튼 (가운데 정렬)
-
-### 파일 소유권
-- senior-dev: src/pages/CalendarPage.tsx, src/hooks/useCalendar.ts, 라우팅 수정
-- lead-designer: 달력 날짜 셀 컴포넌트, 탭바 디자인
-- qa-tester: 날짜 클릭/월 이동/거래 표시 시나리오 → BUGS.md
-
----
-
-## 신규 작업: 멤버 선택 UX 개선
-
-### 변경 방향
-- 거래 등록 시 금액 입력 전 멤버를 가장 먼저 선택
-- 공유 가계부 컨셉: "지금 누가 입력하고 있나요?"
-- 심플하고 큰 UI, 한눈에 선택 가능하게
-
-### 변경 상세
-
-1. **+ 버튼 클릭 시**
-   - 멤버 미선택 상태면 멤버 선택 시트 먼저 표시
-   - 각 멤버를 큰 카드 형태 (아이콘 + 이름) 2열 그리드
-   - 선택 완료 → 거래 등록 화면 진입
-
-2. **선택된 멤버는 세션 동안 유지**
-   - 같은 사람이 여러 건 입력할 때 매번 선택 불필요
-   - 등록 화면 상단에 현재 멤버 표시 + 변경 버튼
-
-3. **디자인 원칙**
-   - 흰 배경, 심플한 라인 아이콘
-   - 카드 2열 그리드, 선택 시 테두리 강조 (teal)
-   - 기존 하단 작은 아이콘 방식 완전 제거
-
-### 파일 소유권
-- senior-dev: src/hooks/useActiveMember.ts, 멤버 세션 상태 관리, 라우팅 수정
-- lead-designer: src/components/member/MemberSelectSheet.tsx, src/components/member/MemberCard.tsx, 등록 화면 상단 멤버 표시 컴포넌트
-- qa-tester: 멤버 선택 → 거래 등록 플로우 테스트, BUGS.md
+## Safe Area (iOS)
+- 기본 패딩: `src/index.css`의 `.pt-safe` = `env(safe-area-inset-top, 0px)` (헤더 없는 페이지용)
+- 헤더 있는 페이지: 헤더에 `style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}` 인라인
+- 하단 패딩: `.pb-safe` = `calc(env(safe-area-inset-bottom, 0px) + 6rem + var(--ad-banner-height, 0px))`
+- 플로팅 버튼: `bottom: calc(var(--ad-banner-height, 50px) + env(safe-area-inset-bottom, 0px) + 5rem)` (기본값 50px로 배너 로딩 전 가림 방지)
