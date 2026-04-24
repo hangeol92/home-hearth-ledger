@@ -16,29 +16,50 @@ import NotFound from "@/pages/NotFound";
 import HouseholdSetup from "@/pages/HouseholdSetup";
 import CalendarPage from "@/pages/CalendarPage";
 import NotificationsPage from "@/pages/NotificationsPage";
+import JarsPage from "@/pages/JarsPage";
+import SpecialExpensesPage from "@/pages/SpecialExpensesPage";
+import BudgetPage from "@/pages/BudgetPage";
+import JarAllocPage from "@/pages/settings/JarAllocPage";
+import HelpPage from "@/pages/settings/HelpPage";
+import UtilityBillsPage from "@/pages/settings/UtilityBillsPage";
+import LanguagePage from "@/pages/settings/LanguagePage";
+import CurrencyPage from "@/pages/settings/CurrencyPage";
+import { SubscriptionProvider } from "@/components/SubscriptionProvider";
+import { useSubscription } from "@/hooks/useSubscription";
+import PaywallSheet from "@/components/paywall/PaywallSheet";
 import LoginPage from "@/pages/LoginPage";
 import SignUpPage from "@/pages/SignUpPage";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
 async function initStatusBar() {
   try {
     const { StatusBar, Style } = await import('@capacitor/status-bar');
-    await StatusBar.setStyle({ style: Style.Dark });
-    await StatusBar.setBackgroundColor({ color: '#ffffff' });
+    // Blue header extends into status bar — use light (white) icons
+    await StatusBar.setStyle({ style: Style.Light });
+    await StatusBar.setBackgroundColor({ color: '#2563d9' });
   } catch {
     // web 환경에서는 StatusBar API 없음 — 무시
   }
 }
 
+function PaywallBridge() {
+  const { showPaywall } = useSubscription();
+  return showPaywall ? <PaywallSheet /> : null;
+}
+
 const App = () => {
   useEffect(() => { initStatusBar(); }, []);
   return (
+  <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <SubscriptionProvider>
+        <PaywallBridge />
         <SyncStatus />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -47,18 +68,28 @@ const App = () => {
           <Route path="/history" element={<History />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/jars" element={<JarsPage />} />
           <Route path="/charts" element={<Charts />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/add" element={<AddTransaction />} />
           <Route path="/edit/:id" element={<AddTransaction />} />
           <Route path="/members" element={<Members />} />
           <Route path="/household/setup" element={<HouseholdSetup />} />
+          <Route path="/special-expenses" element={<SpecialExpensesPage />} />
+          <Route path="/budget" element={<BudgetPage />} />
+          <Route path="/settings/jars" element={<JarAllocPage />} />
+          <Route path="/settings/utility" element={<UtilityBillsPage />} />
+          <Route path="/settings/language" element={<LanguagePage />} />
+          <Route path="/settings/currency" element={<CurrencyPage />} />
+          <Route path="/settings/help" element={<HelpPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <BottomNav />
+        </SubscriptionProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
   );
 };
 

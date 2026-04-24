@@ -7,7 +7,8 @@
     "charts": "Charts",
     "settings": "Settings",
     "calendar": "Calendar",
-    "notifications": "Alerts"
+    "notifications": "Alerts",
+    "jars": "Jars"
   },
   "dashboard": {
     "balance": "Total Balance",
@@ -20,7 +21,10 @@
     "yourJars": "Your Jars",
     "thisMonth": "This Month",
     "thisYear": "This Year",
-    "periodNet": "Period net"
+    "periodNet": "Period net",
+    "allocation": "allocation",
+    "balanceSpentMonth": "{{pct}}% of balance spent this month",
+    "balanceSpentYear": "{{pct}}% of balance spent this year"
   },
   "history": {
     "title": "History",
@@ -44,10 +48,14 @@
   "budget": {
     "title": "Budget",
     "subtitle": "Set monthly limits per jar",
+    "tabMonthly": "Monthly",
+    "tabPeriod": "Period",
+    "periodHint": "Break the month into early/mid/late and set targets per category.",
+    "setTarget": "Target amount",
     "spent": "spent",
     "of": "of",
     "remaining": "remaining",
-    "over": "over budget",
+    "over": "over",
     "setBudget": "Set budget",
     "save": "Save",
     "cancel": "Cancel"
@@ -101,15 +109,85 @@
     "expense": "Expense",
     "amount": "Amount",
     "jar": "Jar",
+    "mainCategory": "Category",
     "subCategory": "Sub-category",
     "date": "Date",
     "note": "Note",
     "notePlaceholder": "Optional note",
     "member": "Member",
+    "payer": "Paid by",
+    "shared": "Shared",
+    "personalMoney": "Personal money",
+    "personalMoneyHint": "To be reimbursed to shared account",
     "save": "Save",
     "update": "Update",
     "noMembers": "Add a family member first",
     "incomeHint": "Income auto-splits into all 5 jars by your allocation."
+  },
+  "period": {
+    "early": "Early",
+    "mid": "Mid",
+    "late": "Late",
+    "dayUnit": "",
+    "setBudget": "Set target",
+    "usagePct": "{{pct}}% used"
+  },
+  "incomeCat": {
+    "Salary": "Salary",
+    "Bonus": "Bonus",
+    "Asset Adjustment": "Asset Adj.",
+    "Other": "Other"
+  },
+  "mainCat": {
+    "Food": "Food",
+    "Transport": "Transport",
+    "Utilities": "Utilities",
+    "Necessities": "Daily",
+    "Culture": "Culture",
+    "Education": "Education",
+    "Fashion": "Fashion",
+    "Health": "Health",
+    "Beauty": "Beauty",
+    "Travel": "Travel",
+    "Other": "Other"
+  },
+  "livingSub": {
+    "Eating Out": "Eating Out",
+    "Groceries": "Groceries",
+    "Snacks": "Snacks",
+    "Bus/Subway": "Bus/Subway",
+    "Taxi": "Taxi",
+    "Fuel": "Fuel",
+    "Parking": "Parking",
+    "Household": "Household",
+    "Hygiene": "Hygiene",
+    "Kitchen": "Kitchen",
+    "Movies": "Movies",
+    "Concert": "Concert",
+    "Hobby": "Hobby",
+    "Games": "Games",
+    "Tuition": "Tuition",
+    "Books": "Books",
+    "Online Course": "Online Course",
+    "Stationery": "Stationery",
+    "Clothing": "Clothing",
+    "Shoes": "Shoes",
+    "Accessories": "Accessories",
+    "Hospital": "Hospital",
+    "Pharmacy": "Pharmacy",
+    "Fitness": "Fitness",
+    "Haircut": "Haircut",
+    "Skincare": "Skincare",
+    "Cosmetics": "Cosmetics",
+    "Accommodation": "Hotel",
+    "Flight": "Flight",
+    "Activities": "Activities",
+    "Water": "Water",
+    "Electricity": "Electricity",
+    "Gas": "Gas",
+    "Internet": "Internet",
+    "Telecom": "Telecom",
+    "Special Expense": "Special"
   },
   "jars": {
     "giving": "Giving",
@@ -122,6 +200,17 @@
     "savingsDesc": "Emergency & big purchases",
     "livingDesc": "Daily expenses",
     "seedDesc": "Opportunities & helping others"
+  },
+  "utility": {
+    "title": "Utility Bills",
+    "water": "Water",
+    "electricity": "Electricity",
+    "gas": "Gas",
+    "internet": "Internet",
+    "telecom": "Phone",
+    "bimonthly": "Bimonthly",
+    "monthlyAvg": "Monthly avg (water ÷2)",
+    "save": "Save"
   },
   "receipt": {
     "scanTitle": "Scan Receipt",
@@ -173,6 +262,25 @@
     "noMembersHint": "Add members in Settings › Members",
     "confirm": "Confirm"
   },
+  "special": {
+    "title": "Special Expenses",
+    "empty": "No special expenses yet",
+    "emptyHint": "Tap + to add one",
+    "addTitle": "Add Special Expense",
+    "namePlaceholder": "Name (e.g. Flight to Korea)",
+    "totalPlaceholder": "Total amount",
+    "funding": "Funding source",
+    "fund_bonus": "Bonus",
+    "fund_reserve": "Reserve",
+    "fund_monthly": "Monthly",
+    "memoPlaceholder": "Memo (optional)",
+    "save": "Save",
+    "remaining": "remaining",
+    "over": "over",
+    "addPayment": "Add payment",
+    "paymentDetails": "Payment details",
+    "amount": "Amount"
+  },
   "sub": {
     "Donation": "Donation",
     "Charity": "Charity",
@@ -197,5 +305,29 @@
     "Helping Others": "Helping Others",
     "Business": "Business",
     "Other": "Other"
+  },
+  "paywall": {
+    "title": "Upgrade to Premium",
+    "subtitle": "No ads, smarter money management",
+    "benefit1": "Ad-free experience",
+    "benefit2": "Share with 3+ members",
+    "benefit3": "Data backup & export",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "priceMonthly": "$0.99 / month",
+    "priceAnnual": "$9.99 / year ($0.83/mo)",
+    "bestValue": "Best Value",
+    "cta": "Start Premium",
+    "legal": "Cancel anytime",
+    "manage": "Manage Subscription",
+    "active": "Premium Active",
+    "gateExport": "Export is a premium feature",
+    "gateMember": "Sharing with 3+ members requires premium"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "premium": "Premium",
+    "free": "Free",
+    "upgrade": "Upgrade"
   }
 }

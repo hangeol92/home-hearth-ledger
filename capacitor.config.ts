@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
 
   ios: {
-    contentInset: 'always',
+    contentInset: 'never',
     backgroundColor: '#ffffff',
     scheme: 'fivejars',
   },
@@ -28,9 +28,9 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
     StatusBar: {
-      // iOS only – matches the light header in the app
-      style: 'DEFAULT',
-      backgroundColor: '#ffffff',
+      // LIGHT = white icons, visible on the blue primary header
+      style: 'LIGHT',
+      backgroundColor: '#2563d9',
     },
   },
 };

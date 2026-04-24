@@ -28,8 +28,11 @@ export default function CalendarPage() {
   const { jars } = useJars();
   const { members } = useMembers();
   const { activeMember, setActiveMember } = useActiveMember();
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
   const [showMemberSheet, setShowMemberSheet] = useState(false);
   const [showActionSheet, setShowActionSheet] = useState(false);
+  const [memberSheetTarget, setMemberSheetTarget] = useState<'manual' | 'scan'>('manual');
   const { toast } = useToast();
   const { status: scanStatus, result: scanResult, error: scanError, scanFromCamera, scanFromGallery, reset: resetScan } = useReceiptScanner();
 
@@ -45,7 +48,7 @@ export default function CalendarPage() {
     year, month, selectedDate,
     totalIncome, totalExpense,
     expenseByDate, selectedTxs,
-    prevMonth, nextMonth, selectDate,
+    prevMonth, nextMonth, selectDate, goToMonth,
     firstDayOfWeek, daysInMonth,
   } = useCalendar();
 
@@ -61,12 +64,69 @@ export default function CalendarPage() {
   const monthLabel = new Date(year, month).toLocaleDateString(i18n.language, { year: 'numeric', month: 'long' });
 
   return (
-    <div className="min-h-screen bg-white pb-40 pt-safe">
+    <div className="min-h-screen bg-white pb-40" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      {/* Month picker popup */}
+      {showMonthPicker && (() => {
+        const now = new Date();
+        const maxYear = now.getFullYear();
+        const MONTHS = Array.from({ length: 12 }, (_, i) =>
+          new Date(2000, i, 1).toLocaleDateString(i18n.language, { month: 'short' })
+        );
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-8">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowMonthPicker(false)} />
+            <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xs p-4">
+              {/* Year navigator */}
+              <div className="flex items-center justify-between mb-3">
+                <button
+                  onClick={() => setPickerYear(y => y - 1)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 active:bg-gray-200"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="text-base font-bold">{pickerYear}</span>
+                <button
+                  onClick={() => setPickerYear(y => y + 1)}
+                  disabled={pickerYear >= maxYear}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 active:bg-gray-200 disabled:opacity-30"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+              {/* Month grid */}
+              <div className="grid grid-cols-4 gap-2">
+                {MONTHS.map((label, idx) => {
+                  const isActive = pickerYear === year && idx === month;
+                  const isFuture = pickerYear > now.getFullYear() ||
+                    (pickerYear === now.getFullYear() && idx > now.getMonth());
+                  return (
+                    <button
+                      key={idx}
+                      disabled={isFuture}
+                      onClick={() => { goToMonth(pickerYear, idx); setShowMonthPicker(false); }}
+                      className={`rounded-xl py-2 text-sm font-medium transition-all ${
+                        isActive ? 'bg-gray-900 text-white' :
+                        isFuture ? 'opacity-25 text-muted-foreground' :
+                        'bg-gray-100 text-foreground active:scale-95'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
       {/* 헤더 */}
       <div className="flex items-center justify-between px-4 py-3 min-h-[44px]">
-        <button className="flex items-center gap-1 text-lg font-bold" onClick={() => {}}>
+        <button
+          className="flex items-center gap-1 text-lg font-bold active:opacity-70"
+          onClick={() => { setPickerYear(year); setShowMonthPicker(true); }}
+        >
           {monthLabel}
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4 text-gray-400" />
         </button>
         <div className="flex items-center gap-3 text-gray-400 min-h-[44px]">
           <button className="flex items-center justify-center"><Search className="h-5 w-5" /></button>
@@ -77,6 +137,7 @@ export default function CalendarPage() {
               if (activeMember || members.length === 0) {
                 setShowActionSheet(true);
               } else {
+                setMemberSheetTarget('scan');
                 setShowMemberSheet(true);
               }
             }}
@@ -143,7 +204,7 @@ export default function CalendarPage() {
               </span>
               {expense > 0 && (
                 <span className="text-[9px] text-red-500 leading-none mt-0.5 truncate w-full text-center">
-                  {format(expense)}
+                  -{format(expense)}
                 </span>
               )}
             </button>
@@ -165,7 +226,7 @@ export default function CalendarPage() {
                 <div key={tx.id} className="flex items-center gap-3 rounded-xl bg-white border border-gray-100 shadow-sm p-3">
                   <JarIcon jar={tx.jar} size={20} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{tx.subCategory}</p>
+                    <p className="text-sm font-medium truncate">{String(t(`sub.${tx.subCategory}`, { defaultValue: tx.subCategory }))}</p>
                     {tx.note && <p className="text-xs text-gray-400 truncate">{tx.note}</p>}
                   </div>
                   <p className={`text-sm font-bold ${tx.type === 'income' ? 'text-emerald-600' : 'text-red-500'}`}>
@@ -179,12 +240,13 @@ export default function CalendarPage() {
       )}
 
       {/* 가계부 등록 플로팅 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 flex justify-center z-40 pb-safe mb-20">
+      <div className="fixed bottom-0 left-0 right-0 flex justify-center z-40 pb-safe">
         <button
           onClick={() => {
             if (activeMember || members.length === 0) {
-              setShowActionSheet(true);
+              navigate('/add', { state: { date: selectedDate ?? today } });
             } else {
+              setMemberSheetTarget('manual');
               setShowMemberSheet(true);
             }
           }}
@@ -200,7 +262,11 @@ export default function CalendarPage() {
           onSelect={(m) => {
             setActiveMember(m);
             setShowMemberSheet(false);
-            setShowActionSheet(true);
+            if (memberSheetTarget === 'manual') {
+              navigate('/add', { state: { date: selectedDate ?? today } });
+            } else {
+              setShowActionSheet(true);
+            }
           }}
           onClose={() => setShowMemberSheet(false)}
         />

@@ -5,6 +5,7 @@ import { useMembers } from '@/hooks/useStore';
 import { MEMBER_ROLES, MEMBER_COLORS, MEMBER_EMOJI_OPTIONS, type MemberRole } from '@/types';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next';
+import { useSubscription } from '@/hooks/useSubscription';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -15,6 +16,8 @@ export default function Members() {
   const navigate = useNavigate();
   const { members, save, remove } = useMembers();
   const { t } = useTranslation();
+  const { isPremium, openPaywall } = useSubscription();
+  const FREE_MEMBER_LIMIT = 2;
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -61,6 +64,10 @@ export default function Members() {
   };
 
   const openAddSheet = () => {
+    if (!isPremium && members.length >= FREE_MEMBER_LIMIT) {
+      openPaywall();
+      return;
+    }
     setAddStep('role');
     setPendingRole(null);
     setNewName('');

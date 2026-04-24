@@ -52,6 +52,11 @@ export function useCalendar() {
   function selectDate(date: string) {
     setSelectedDate(prev => prev === date ? null : date);
   }
+  function goToMonth(y: number, m: number) {
+    setYear(y);
+    setMonth(m);
+    setSelectedDate(null);
+  }
 
   const firstDayOfWeek = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -61,7 +66,7 @@ export function useCalendar() {
     monthTxs, byDate, expenseByDate,
     totalIncome, totalExpense,
     selectedTxs,
-    prevMonth, nextMonth, selectDate,
+    prevMonth, nextMonth, selectDate, goToMonth,
     firstDayOfWeek, daysInMonth,
   };
 }

@@ -2,24 +2,72 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCurrency, useTransactions, useJars } from '@/hooks/useStore';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { clearAllData } from '@/lib/db';
-import { CURRENCIES, JARS } from '@/types';
-import { Download, Trash2, RotateCcw, Copy, Check, LogOut, AlertTriangle, Eye, EyeOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { JARS } from '@/types';
+import {
+  Download, Trash2, LogOut, AlertTriangle, Eye, EyeOff,
+  ChevronRight, Users, Gem, Globe, DollarSign, Home, Star,
+  HelpCircle, Mail, Info,
+} from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGES } from '@/i18n';
-import { JarIcon } from '@/components/JarIcon';
-import { getMyHousehold, generateInviteCode } from '@/api/households';
+import { getMyHousehold } from '@/api/households';
+
+const APP_VERSION = '1.0.0';
+
+function SettingsRow({
+  icon, label, value, onPress, danger = false,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value?: string;
+  onPress: () => void;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      onClick={onPress}
+      className={`flex items-center gap-3 w-full px-4 py-3.5 text-sm active:bg-secondary ${danger ? 'text-destructive' : ''}`}
+    >
+      <span className={`shrink-0 ${danger ? 'text-destructive' : 'text-muted-foreground'}`}>{icon}</span>
+      <span className="flex-1 text-left font-medium">{label}</span>
+      {value && <span className="text-muted-foreground text-xs mr-1">{value}</span>}
+      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+    </button>
+  );
+}
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <p className="px-4 pt-6 pb-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      {label}
+    </p>
+  );
+}
+
+function SectionCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mx-5 rounded-xl bg-card shadow-sm overflow-hidden divide-y divide-border">
+      {children}
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { currency, setCurrency } = useCurrency();
+  const { currency } = useCurrency();
   const { transactions } = useTransactions();
-  const { jars, updateAllocation, reset } = useJars();
+  const { jars, updateAllocation } = useJars();
   const { t, i18n } = useTranslation();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const { isPremium, openPaywall } = useSubscription();
+
+  const [household, setHousehold] = useState<{ id: string; name: string; invite_code: string } | null>(null);
+  useEffect(() => {
+    getMyHousehold().then(h => setHousehold(h as typeof household));
+  }, []);
 
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [clearPassword, setClearPassword] = useState('');
@@ -27,354 +75,189 @@ export default function SettingsPage() {
   const [clearLoading, setClearLoading] = useState(false);
   const [clearError, setClearError] = useState('');
 
-  const [household, setHousehold] = useState<{ id: string; name: string; invite_code: string } | null>(null);
-  const [copiedCode, setCopiedCode] = useState(false);
-  const { user } = useAuth();
-
-  useEffect(() => {
-    getMyHousehold().then(h => setHousehold(h as { id: string; name: string; invite_code: string } | null));
-  }, []);
-
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/login');
-    } catch {
-      toast({ title: 'Sign out failed', variant: 'destructive' });
-    }
-  };
-
-  const handleCopyInviteCode = async () => {
-    if (!household) return;
-    await navigator.clipboard.writeText(household.invite_code);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
-
-  const handleRegenerateCode = async () => {
-    if (!household) return;
-    try {
-      const newCode = await generateInviteCode(household.id);
-      setHousehold(h => h ? { ...h, invite_code: newCode } : h);
-      toast({ title: '✓ New invite code generated' });
-    } catch {
-      toast({ title: 'Failed to regenerate code', variant: 'destructive' });
-    }
-  };
-
-  // Local editable allocations
-  const [allocs, setAllocs] = useState<Record<string, number>>({});
-  useEffect(() => {
-    const next: Record<string, number> = {};
-    jars.forEach(j => { next[j.id] = j.allocationPct; });
-    setAllocs(next);
-  }, [jars]);
-
-  const total = Object.values(allocs).reduce((s, n) => s + (Number.isFinite(n) ? n : 0), 0);
-
-  const handleSaveAllocs = async () => {
-    if (Math.round(total) !== 100) {
-      toast({ title: t('settings.invalidTotal'), variant: 'destructive' });
-      return;
-    }
-    for (const j of jars) {
-      if (allocs[j.id] !== j.allocationPct) {
-        await updateAllocation(j.id, allocs[j.id]);
-      }
-    }
-    toast({ title: '✓' });
+    try { await signOut(); navigate('/login'); }
+    catch { toast({ title: 'Sign out failed', variant: 'destructive' }); }
   };
 
   const handleExport = () => {
-    if (transactions.length === 0) {
-      toast({ title: t('settings.noData') });
-      return;
-    }
+    if (!isPremium) { openPaywall(); return; }
+    if (transactions.length === 0) { toast({ title: t('settings.noData') }); return; }
     const header = 'Date,Type,Jar,SubCategory,Amount,Note,Member\n';
     const rows = transactions.map(tx =>
       `${tx.date},${tx.type},${tx.jar},${tx.subCategory},${tx.amount},"${tx.note}",${tx.memberId}`
     ).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
+    const a = document.createElement('a'); a.href = url;
     a.download = `five-jars-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleClear = () => {
-    setClearPassword('');
-    setClearError('');
-    setClearPasswordVisible(false);
-    setShowClearDialog(true);
+    a.click(); URL.revokeObjectURL(url);
   };
 
   const handleClearConfirm = async () => {
     if (!user) {
-      // Guest: no password check needed, just confirm
       setClearLoading(true);
-      await clearAllData();
-      window.location.reload();
-      return;
+      await clearAllData(); window.location.reload(); return;
     }
-    if (!clearPassword) {
-      setClearError('Please enter your password.');
-      return;
-    }
-    setClearLoading(true);
-    setClearError('');
+    if (!clearPassword) { setClearError('Please enter your password.'); return; }
+    setClearLoading(true); setClearError('');
     try {
       const { error } = await import('@/lib/supabase').then(m =>
         m.supabase.auth.signInWithPassword({ email: user.email!, password: clearPassword })
       );
-      if (error) {
-        setClearError('Incorrect password.');
-        setClearLoading(false);
-        return;
-      }
-      await clearAllData();
-      window.location.reload();
+      if (error) { setClearError('Incorrect password.'); setClearLoading(false); return; }
+      await clearAllData(); window.location.reload();
     } catch {
-      setClearError('Verification failed. Try again.');
-      setClearLoading(false);
+      setClearError('Verification failed. Try again.'); setClearLoading(false);
     }
   };
 
-  const handleReset = async () => {
-    if (window.confirm(t('settings.confirmReset'))) {
-      await reset();
-      toast({ title: '✓' });
-    }
-  };
+  const currentLang = LANGUAGES.find(l => i18n.language === l.code || i18n.language.startsWith(l.code))?.name ?? '';
 
   return (
-    <div className="min-h-screen pb-safe">
-      {/* Clear data confirmation dialog */}
+    <div className="min-h-screen bg-background pb-safe" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+
+      {/* Clear dialog */}
       {showClearDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowClearDialog(false)} />
           <div className="relative bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl">
-            {/* Icon */}
             <div className="flex justify-center mb-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
                 <AlertTriangle className="h-7 w-7 text-red-600" />
               </div>
             </div>
-
-            <h2 className="text-center text-lg font-bold text-gray-900 mb-1">
-              {t('settings.clearAll')}
-            </h2>
+            <h2 className="text-center text-lg font-bold mb-1">{t('settings.clearAll')}</h2>
             <p className="text-center text-sm text-gray-500 mb-5">
-              This will permanently delete all transactions, budgets, members, and jar data. This action cannot be undone.
+              모든 거래, 예산, 구성원, 항아리 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
             </p>
-
             {user && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Enter your password to confirm
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호 확인</label>
                 <div className="relative">
                   <input
                     type={clearPasswordVisible ? 'text' : 'password'}
                     value={clearPassword}
                     onChange={e => { setClearPassword(e.target.value); setClearError(''); }}
                     placeholder="Password"
-                    autoComplete="off"
-                    data-1p-ignore
+                    autoComplete="off" data-1p-ignore
                     className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-11 text-sm focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-400"
                     onKeyDown={e => e.key === 'Enter' && handleClearConfirm()}
                     autoFocus
                   />
-                  <button
-                    type="button"
-                    onClick={() => setClearPasswordVisible(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  >
+                  <button type="button" onClick={() => setClearPasswordVisible(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                     {clearPasswordVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {clearError && (
-                  <p className="mt-1.5 text-xs text-red-600">{clearError}</p>
-                )}
+                {clearError && <p className="mt-1.5 text-xs text-red-600">{clearError}</p>}
               </div>
             )}
-
             <div className="flex gap-2">
-              <button
-                onClick={() => setShowClearDialog(false)}
-                className="flex-1 h-12 rounded-xl border border-gray-200 text-sm font-medium text-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleClearConfirm}
+              <button onClick={() => setShowClearDialog(false)}
+                className="flex-1 h-12 rounded-xl border border-gray-200 text-sm font-medium">취소</button>
+              <button onClick={handleClearConfirm}
                 disabled={clearLoading || (!!user && !clearPassword)}
-                className="flex-1 h-12 rounded-xl bg-red-600 text-white text-sm font-semibold disabled:opacity-40"
-              >
-                {clearLoading ? 'Deleting...' : 'Delete All'}
+                className="flex-1 h-12 rounded-xl bg-red-600 text-white text-sm font-semibold disabled:opacity-40">
+                {clearLoading ? '삭제 중...' : '전체 삭제'}
               </button>
             </div>
           </div>
         </div>
       )}
-      <div className="px-5 pb-4 pt-safe">
+
+      {/* Header */}
+      <div className="px-5 pt-2 pb-4">
         <h1 className="text-2xl font-bold">{t('settings.title')}</h1>
       </div>
 
-      <div className="px-5 space-y-6">
-        {/* Account */}
-        <div className="rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="font-semibold text-sm mb-3">Account</h2>
-          {user ? (
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Email</p>
-                <p className="text-sm font-medium text-gray-700">{user.email}</p>
-              </div>
-              <Button onClick={handleSignOut} variant="outline" className="w-full rounded-xl h-12 justify-start gap-3 text-destructive hover:text-destructive">
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
+      {/* 구독 */}
+      <div className="mx-5 rounded-xl overflow-hidden shadow-sm">
+        {isPremium ? (
+          <div className="flex items-center gap-3 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl px-4 py-4">
+            <Star className="h-5 w-5 text-amber-500 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-700">{t('paywall.active')}</p>
+              <p className="text-xs text-amber-500">{t('paywall.legal')}</p>
             </div>
-          ) : (
-            <div className="space-y-2">
-              <Button
-                onClick={() => navigate('/login')}
-                className="w-full rounded-xl h-12 bg-black text-white font-medium"
-              >
-                Sign In
-              </Button>
-              <Button
-                onClick={() => navigate('/signup')}
-                variant="outline"
-                className="w-full rounded-xl h-12"
-              >
-                Create Account
-              </Button>
+          </div>
+        ) : (
+          <button onClick={openPaywall}
+            className="flex items-center gap-3 w-full bg-gray-900 rounded-xl px-4 py-4 active:opacity-80">
+            <Gem className="h-5 w-5 text-white shrink-0" />
+            <div className="flex-1 text-left">
+              <p className="text-sm font-semibold text-white">{t('subscription.upgrade')}</p>
+              <p className="text-xs text-gray-400">광고 제거 · 백업 · 3인 이상 공유</p>
             </div>
-          )}
-        </div>
-
-        {/* Five Jars allocation */}
-        <div className="rounded-xl bg-card p-4 shadow-sm">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="font-semibold text-sm">{t('settings.fiveJars')}</h2>
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            >
-              <RotateCcw className="h-3 w-3" />
-              {t('settings.resetBalances')}
-            </button>
-          </div>
-          <p className="text-xs text-muted-foreground mb-3">{t('settings.fiveJarsHint')}</p>
-          <div className="space-y-2">
-            {JARS.map(j => (
-              <div key={j.id} className="flex items-center gap-3">
-                <JarIcon jar={j.id} size={16} />
-                <span className="flex-1 text-sm font-medium">{t(`jars.${j.id}`)}</span>
-                <Input
-                  type="number"
-                  value={allocs[j.id] ?? ''}
-                  onChange={e => setAllocs(a => ({ ...a, [j.id]: Math.max(0, parseFloat(e.target.value) || 0) }))}
-                  className="w-20 rounded-lg text-right"
-                  inputMode="numeric"
-                  min="0"
-                />
-                <span className="text-sm text-muted-foreground w-4">%</span>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center justify-between mt-3 pt-3 border-t">
-            <span className="text-sm font-semibold">{t('settings.totalPct')}</span>
-            <span className={`text-sm font-bold ${Math.round(total) === 100 ? 'text-green-600' : 'text-destructive'}`}>
-              {Math.round(total)}%
-            </span>
-          </div>
-          <Button onClick={handleSaveAllocs} size="sm" className="w-full mt-3 rounded-xl">
-            {t('budget.save')}
-          </Button>
-        </div>
-
-        {/* Language */}
-        <div className="rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="font-semibold text-sm mb-3">{t('settings.language')}</h2>
-          <div className="flex flex-wrap gap-2">
-            {LANGUAGES.map(l => (
-              <button
-                key={l.code}
-                onClick={() => i18n.changeLanguage(l.code)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                  i18n.language === l.code || i18n.language.startsWith(l.code)
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground'
-                }`}
-              >
-                {l.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Currency */}
-        <div className="rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="font-semibold text-sm mb-3">{t('settings.currency')}</h2>
-          <div className="flex flex-wrap gap-2">
-            {CURRENCIES.map(c => (
-              <button
-                key={c.code}
-                onClick={() => setCurrency(c.code)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                  currency === c.code
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground'
-                }`}
-              >
-                {c.symbol} {c.code}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Household invite code */}
-        <div className="rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="font-semibold text-sm mb-3">Household</h2>
-          {household ? (
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Invite Code</p>
-              <div className="flex items-center gap-2">
-                <span className="flex-1 font-mono text-2xl font-bold tracking-widest text-center rounded-xl bg-secondary py-3 px-3">
-                  {household.invite_code}
-                </span>
-                <Button size="icon" variant="outline" onClick={handleCopyInviteCode} className="shrink-0 rounded-lg">
-                  {copiedCode ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-              <Button onClick={handleRegenerateCode} variant="outline" size="sm" className="w-full rounded-xl">
-                Regenerate Code
-              </Button>
-            </div>
-          ) : (
-            <button
-              onClick={() => navigate('/household/setup')}
-              className="text-sm text-primary underline underline-offset-2"
-            >
-              Set up a household
-            </button>
-          )}
-        </div>
-
-        <Button onClick={handleExport} variant="outline" className="w-full rounded-xl h-12 justify-start gap-3">
-          <Download className="h-4 w-4" />
-          {t('settings.exportCsv')}
-        </Button>
-
-        <Button onClick={handleClear} variant="outline" className="w-full rounded-xl h-12 justify-start gap-3 text-destructive hover:text-destructive">
-          <Trash2 className="h-4 w-4" />
-          {t('settings.clearAll')}
-        </Button>
+            <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
+          </button>
+        )}
       </div>
+
+      {/* 계정 */}
+      <SectionHeader label="계정" />
+      <SectionCard>
+        {user ? (
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <span className="text-muted-foreground shrink-0"><LogOut className="h-4 w-4" /></span>
+            <span className="flex-1 text-sm font-medium text-left truncate text-muted-foreground">{user.email}</span>
+            <button onClick={handleSignOut} className="shrink-0 text-xs font-semibold text-destructive px-2 py-1 rounded-lg active:bg-destructive/10">
+              로그아웃
+            </button>
+          </div>
+        ) : (
+          <>
+            <SettingsRow icon={<LogOut className="h-4 w-4" />} label="로그인" onPress={() => navigate('/login')} />
+            <SettingsRow icon={<Users className="h-4 w-4" />} label="회원가입" onPress={() => navigate('/signup')} />
+          </>
+        )}
+      </SectionCard>
+
+      {/* 가계부 */}
+      <SectionHeader label="가계부" />
+      <SectionCard>
+        <SettingsRow icon={<Users className="h-4 w-4" />} label={t('members.title')} onPress={() => navigate('/members')} />
+        <SettingsRow icon={<Home className="h-4 w-4" />} label={t('settings.fiveJars')} onPress={() => navigate('/settings/jars')} />
+      </SectionCard>
+
+      {/* 앱 설정 */}
+      <SectionHeader label={t('settings.language') + ' / ' + t('settings.currency')} />
+      <SectionCard>
+        <SettingsRow icon={<Globe className="h-4 w-4" />} label={t('settings.language')} value={currentLang} onPress={() => navigate('/settings/language')} />
+        <SettingsRow icon={<DollarSign className="h-4 w-4" />} label={t('settings.currency')} value={currency} onPress={() => navigate('/settings/currency')} />
+      </SectionCard>
+
+      {/* 공유 가계부 */}
+      <SectionHeader label="공유 가계부" />
+      <SectionCard>
+        <SettingsRow
+          icon={<Users className="h-4 w-4" />}
+          label="Household"
+          value={household?.name ?? (user ? '설정하기' : '로그인 필요')}
+          onPress={() => navigate('/household/setup')}
+        />
+      </SectionCard>
+
+      {/* 데이터 */}
+      <SectionHeader label="데이터" />
+      <SectionCard>
+        <SettingsRow icon={<Download className="h-4 w-4" />} label={t('settings.exportCsv')} onPress={handleExport} />
+        <SettingsRow icon={<Trash2 className="h-4 w-4" />} label={t('settings.clearAll')} onPress={() => { setClearPassword(''); setClearError(''); setShowClearDialog(true); }} danger />
+      </SectionCard>
+
+      {/* 앱 정보 */}
+      <SectionHeader label="앱 정보" />
+      <SectionCard>
+        <SettingsRow icon={<HelpCircle className="h-4 w-4" />} label="도움말" onPress={() => navigate('/settings/help')} />
+        <SettingsRow icon={<Mail className="h-4 w-4" />} label="문의하기" onPress={() => { window.open('mailto:support@fivejars.app?subject=Five Jars 문의', '_blank'); }} />
+        <button className="flex items-center gap-3 w-full px-4 py-3.5 text-sm">
+          <Info className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="flex-1 text-left font-medium">버전 정보</span>
+          <span className="text-muted-foreground text-xs">v{APP_VERSION}</span>
+        </button>
+      </SectionCard>
+
+      <div className="h-8" />
     </div>
   );
 }

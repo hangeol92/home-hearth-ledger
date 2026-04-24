@@ -7,7 +7,8 @@
     "charts": "グラフ",
     "settings": "設定",
     "calendar": "カレンダー",
-    "notifications": "通知"
+    "notifications": "通知",
+    "jars": "壺"
   },
   "dashboard": {
     "balance": "総残高",
@@ -20,7 +21,10 @@
     "yourJars": "あなたの壺",
     "thisMonth": "今月",
     "thisYear": "今年",
-    "periodNet": "期間純収益"
+    "periodNet": "期間純収益",
+    "allocation": "配分",
+    "balanceSpentMonth": "今月の残高の{{pct}}%を支出",
+    "balanceSpentYear": "今年の残高の{{pct}}%を支出"
   },
   "history": {
     "title": "履歴",
@@ -44,10 +48,14 @@
   "budget": {
     "title": "予算",
     "subtitle": "壺ごとの月間上限を設定",
+    "tabMonthly": "月予算",
+    "tabPeriod": "期間目標",
+    "periodHint": "月を上旬・中旬・下旬に分けてカテゴリ別の目標を設定します。",
+    "setTarget": "目標金額",
     "spent": "使用済み",
     "of": "/",
     "remaining": "残り",
-    "over": "予算超過",
+    "over": "超過",
     "setBudget": "予算を設定",
     "save": "保存",
     "cancel": "キャンセル"
@@ -101,15 +109,85 @@
     "expense": "支出",
     "amount": "金額",
     "jar": "壺",
+    "mainCategory": "大分類",
     "subCategory": "サブカテゴリ",
     "date": "日付",
     "note": "メモ",
     "notePlaceholder": "メモ（任意）",
     "member": "メンバー",
+    "payer": "支払者",
+    "shared": "共同",
+    "personalMoney": "個人のお金",
+    "personalMoneyHint": "後で共同口座に入金予定",
     "save": "保存",
     "update": "更新",
     "noMembers": "先に家族メンバーを追加してください",
     "incomeHint": "収入は配分に従って5つの壺に自動振り分けされます。"
+  },
+  "period": {
+    "early": "上旬",
+    "mid": "中旬",
+    "late": "下旬",
+    "dayUnit": "日",
+    "setBudget": "目標を設定",
+    "usagePct": "{{pct}}% 使用"
+  },
+  "incomeCat": {
+    "Salary": "給料",
+    "Bonus": "ボーナス",
+    "Asset Adjustment": "資産調整",
+    "Other": "その他"
+  },
+  "mainCat": {
+    "Food": "食費",
+    "Transport": "交通",
+    "Utilities": "光熱費",
+    "Necessities": "日用品",
+    "Culture": "文化",
+    "Education": "教育",
+    "Fashion": "ファッション",
+    "Health": "健康",
+    "Beauty": "美容",
+    "Travel": "旅行",
+    "Other": "その他"
+  },
+  "livingSub": {
+    "Eating Out": "外食",
+    "Groceries": "食料品",
+    "Snacks": "おやつ",
+    "Bus/Subway": "バス/電車",
+    "Taxi": "タクシー",
+    "Fuel": "ガソリン",
+    "Parking": "駐車場",
+    "Household": "生活用品",
+    "Hygiene": "衛生用品",
+    "Kitchen": "キッチン用品",
+    "Movies": "映画",
+    "Concert": "コンサート",
+    "Hobby": "趣味",
+    "Games": "ゲーム",
+    "Tuition": "授業料",
+    "Books": "書籍",
+    "Online Course": "オンライン講座",
+    "Stationery": "文房具",
+    "Clothing": "衣類",
+    "Shoes": "靴",
+    "Accessories": "アクセサリー",
+    "Hospital": "病院",
+    "Pharmacy": "薬局",
+    "Fitness": "フィットネス",
+    "Haircut": "美容院",
+    "Skincare": "スキンケア",
+    "Cosmetics": "化粧品",
+    "Accommodation": "宿泊",
+    "Flight": "航空券",
+    "Activities": "アクティビティ",
+    "Water": "水道代",
+    "Electricity": "電気代",
+    "Gas": "ガス代",
+    "Internet": "インターネット",
+    "Telecom": "通信費",
+    "Special Expense": "特別支出"
   },
   "jars": {
     "giving": "ギビング",
@@ -122,6 +200,17 @@
     "savingsDesc": "緊急時・大きな買い物",
     "livingDesc": "日々の支出",
     "seedDesc": "機会・人助け"
+  },
+  "utility": {
+    "title": "光熱費",
+    "water": "水道代",
+    "electricity": "電気代",
+    "gas": "ガス代",
+    "internet": "インターネット",
+    "telecom": "通信費",
+    "bimonthly": "隔月",
+    "monthlyAvg": "月平均 (水道÷2)",
+    "save": "保存"
   },
   "receipt": {
     "scanTitle": "レシートスキャン",
@@ -173,6 +262,25 @@
     "noMembersHint": "設定 › メンバーから追加してください",
     "confirm": "選択完了"
   },
+  "special": {
+    "title": "特別支出",
+    "empty": "特別支出がありません",
+    "emptyHint": "＋ボタンで追加してください",
+    "addTitle": "特別支出を追加",
+    "namePlaceholder": "名前 (例: 韓国行き航空券)",
+    "totalPlaceholder": "合計金額",
+    "funding": "資金源",
+    "fund_bonus": "ボーナス",
+    "fund_reserve": "予備費",
+    "fund_monthly": "月次",
+    "memoPlaceholder": "メモ（任意）",
+    "save": "保存",
+    "remaining": "残り",
+    "over": "超過",
+    "addPayment": "支払を追加",
+    "paymentDetails": "支払詳細",
+    "amount": "金額"
+  },
   "sub": {
     "Donation": "寄付",
     "Charity": "慈善",
@@ -197,5 +305,29 @@
     "Helping Others": "人助け",
     "Business": "事業",
     "Other": "その他"
+  },
+  "paywall": {
+    "title": "プレミアムにアップグレード",
+    "subtitle": "広告なし、スマートな家計管理",
+    "benefit1": "広告なしで使用",
+    "benefit2": "3人以上で家計簿を共有",
+    "benefit3": "データバックアップ・エクスポート",
+    "monthly": "月額プラン",
+    "annual": "年額プラン",
+    "priceMonthly": "¥100 / 月",
+    "priceAnnual": "¥1,000 / 年 (¥83/月)",
+    "bestValue": "おトク",
+    "cta": "プレミアムを始める",
+    "legal": "いつでもキャンセル可能",
+    "manage": "サブスクリプション管理",
+    "active": "プレミアム利用中",
+    "gateExport": "エクスポートはプレミアム機能です",
+    "gateMember": "3人以上の共有はプレミアム機能です"
+  },
+  "subscription": {
+    "title": "サブスクリプション",
+    "premium": "プレミアム",
+    "free": "無料",
+    "upgrade": "アップグレード"
   }
 }

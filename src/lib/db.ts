@@ -1,5 +1,5 @@
 import { openDB, DBSchema } from 'idb';
-import type { Transaction, Budget, FamilyMember, JarBalance, JarId } from '@/types';
+import type { Transaction, Budget, FamilyMember, JarBalance, JarId, PeriodBudget, UtilityBill, SpecialExpense } from '@/types';
 import { JARS, LEGACY_CATEGORY_TO_JAR } from '@/types';
 
 interface AccountBookDB extends DBSchema {
@@ -25,10 +25,23 @@ interface AccountBookDB extends DBSchema {
     key: string;
     value: { key: string; value: string };
   };
+  periodBudgets: {
+    key: string;
+    value: PeriodBudget;
+    indexes: { 'by-yearMonth': string };
+  };
+  utilityBills: {
+    key: string;
+    value: UtilityBill;
+  };
+  specialExpenses: {
+    key: string;
+    value: SpecialExpense;
+  };
 }
 
 const DB_NAME = 'household-account-book';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 export async function getDB() {
   return openDB<AccountBookDB>(DB_NAME, DB_VERSION, {
@@ -81,12 +94,28 @@ export async function getDB() {
 
       if (oldVersion < 3) {
         db.createObjectStore('settings', { keyPath: 'key' });
-        // Migrate currency from localStorage if present
         const saved = localStorage.getItem('currency');
         if (saved) {
           const sStore = tx.objectStore('settings');
           await sStore.put({ key: 'currency', value: saved });
           localStorage.removeItem('currency');
+        }
+      }
+
+      if (oldVersion < 4) {
+        // New stores
+        const pbStore = db.createObjectStore('periodBudgets', { keyPath: 'id' });
+        pbStore.createIndex('by-yearMonth', 'yearMonth');
+        db.createObjectStore('utilityBills', { keyPath: 'yearMonth' });
+        db.createObjectStore('specialExpenses', { keyPath: 'id' });
+
+        // Migrate jars: set allocationMode = 'percentage' on existing rows
+        const jarStore = tx.objectStore('jars');
+        const allJars = await jarStore.getAll();
+        for (const j of allJars) {
+          if (!j.allocationMode) {
+            await jarStore.put({ ...j, allocationMode: 'percentage' });
+          }
         }
       }
     },
@@ -208,4 +237,60 @@ export async function clearAllData() {
   await db.clear('members');
   await db.clear('jars');
   await db.clear('settings');
+  await db.clear('periodBudgets');
+  await db.clear('utilityBills');
+  await db.clear('specialExpenses');
+}
+
+// Period Budgets
+export async function getAllPeriodBudgets(): Promise<PeriodBudget[]> {
+  const db = await getDB();
+  return db.getAll('periodBudgets');
+}
+
+export async function getPeriodBudgetsByMonth(yearMonth: string): Promise<PeriodBudget[]> {
+  const db = await getDB();
+  return db.getAllFromIndex('periodBudgets', 'by-yearMonth', yearMonth);
+}
+
+export async function savePeriodBudget(pb: PeriodBudget) {
+  const db = await getDB();
+  await db.put('periodBudgets', pb);
+}
+
+export async function deletePeriodBudget(id: string) {
+  const db = await getDB();
+  await db.delete('periodBudgets', id);
+}
+
+// Utility Bills
+export async function getAllUtilityBills(): Promise<UtilityBill[]> {
+  const db = await getDB();
+  return db.getAll('utilityBills');
+}
+
+export async function getUtilityBill(yearMonth: string): Promise<UtilityBill | undefined> {
+  const db = await getDB();
+  return db.get('utilityBills', yearMonth);
+}
+
+export async function saveUtilityBill(bill: UtilityBill) {
+  const db = await getDB();
+  await db.put('utilityBills', bill);
+}
+
+// Special Expenses
+export async function getAllSpecialExpenses(): Promise<SpecialExpense[]> {
+  const db = await getDB();
+  return db.getAll('specialExpenses');
+}
+
+export async function saveSpecialExpense(expense: SpecialExpense) {
+  const db = await getDB();
+  await db.put('specialExpenses', expense);
+}
+
+export async function deleteSpecialExpense(id: string) {
+  const db = await getDB();
+  await db.delete('specialExpenses', id);
 }

@@ -4,7 +4,7 @@ import { useTransactions, useMembers, useCurrency } from '@/hooks/useStore';
 import { JARS } from '@/types';
 import type { JarId } from '@/types';
 import { JarIcon } from '@/components/JarIcon';
-import { Trash2, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, Pencil, ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getTxColorClass, filterByMember } from '@/lib/utils';
 import {
@@ -25,12 +25,14 @@ function SwipeRow({
   children,
   onEdit,
   onDelete,
+  onClick,
   editLabel,
   deleteLabel,
 }: {
   children: ReactNode;
   onEdit: () => void;
   onDelete: () => void;
+  onClick: () => void;
   editLabel: string;
   deleteLabel: string;
 }) {
@@ -68,7 +70,8 @@ function SwipeRow({
 
   const handleContentClick = (e: React.MouseEvent) => {
     if (moved.current) { e.stopPropagation(); return; }
-    if (offsetRef.current !== 0) { setAnimating(true); syncOffset(0); }
+    if (offsetRef.current !== 0) { setAnimating(true); syncOffset(0); return; }
+    onClick();
   };
 
   const closeAndRun = (fn: () => void) => {
@@ -143,6 +146,7 @@ export default function History() {
   const [filterJar, setFilterJar] = useState<'all' | JarId>('all');
   const [viewMonth, setViewMonth] = useState(toYearMonth(new Date()));
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
 
   const confirmDelete = async () => {
     if (pendingDeleteId) await remove(pendingDeleteId);
@@ -180,6 +184,58 @@ export default function History() {
         <h1 className="text-2xl font-bold">{t('history.title')}</h1>
       </div>
 
+      {/* Month picker popup */}
+      {showMonthPicker && (() => {
+        const oldestYear = parseInt(oldestMonth.slice(0, 4));
+        const currentYear = new Date().getFullYear();
+        const currentMonth = toYearMonth(new Date());
+        const years = Array.from({ length: currentYear - oldestYear + 1 }, (_, i) => currentYear - i);
+        const MONTHS = Array.from({ length: 12 }, (_, i) =>
+          new Date(2000, i, 1).toLocaleDateString(i18n.language, { month: 'short' })
+        );
+        return (
+          <div className="fixed inset-0 z-50 flex items-start justify-center">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowMonthPicker(false)} />
+            <div className="relative bg-white rounded-b-3xl w-full max-h-[70vh] flex flex-col">
+              <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+                <p className="font-bold text-gray-900">{t('history.selectMonth', { defaultValue: '월 선택' })}</p>
+                <button onClick={() => setShowMonthPicker(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="overflow-y-auto px-5 pb-8">
+                {years.map(year => (
+                  <div key={year} className="mb-4">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">{year}</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {MONTHS.map((label, idx) => {
+                        const ym = `${year}-${String(idx + 1).padStart(2, '0')}`;
+                        const disabled = ym < oldestMonth || ym > currentMonth;
+                        const active = ym === viewMonth;
+                        return (
+                          <button
+                            key={ym}
+                            disabled={disabled}
+                            onClick={() => { setViewMonth(ym); setShowMonthPicker(false); }}
+                            className={`rounded-xl py-2.5 text-sm font-medium transition-all ${
+                              active ? 'bg-gray-900 text-white' :
+                              disabled ? 'opacity-25 text-muted-foreground' :
+                              'bg-secondary text-foreground active:scale-95'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Month navigator */}
       <div className="px-5 pb-3">
         <div className="flex items-center justify-between rounded-xl bg-secondary px-1 py-1">
@@ -191,7 +247,13 @@ export default function History() {
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <span className="text-sm font-semibold">{monthLabel}</span>
+          <button
+            onClick={() => setShowMonthPicker(true)}
+            className="flex items-center gap-1 text-sm font-semibold active:opacity-70"
+          >
+            {monthLabel}
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
           <button
             onClick={() => setViewMonth(v => shiftMonth(v, 1))}
             disabled={viewMonth >= toYearMonth(new Date())}
@@ -255,8 +317,8 @@ export default function History() {
               className="shrink-0 flex min-h-[40px] items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors"
               style={
                 filterJar === j.id
-                  ? { backgroundColor: j.color, color: '#fff' }
-                  : { backgroundColor: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))' }
+                  ? { backgroundColor: 'transparent', color: j.color, border: `2px solid ${j.color}` }
+                  : { backgroundColor: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))', border: '2px solid transparent' }
               }
             >
               <JarIcon jar={j.id} size={13} />
@@ -312,6 +374,7 @@ export default function History() {
                 {txs.map(tx => (
                   <SwipeRow
                     key={tx.id}
+                    onClick={() => navigate(`/edit/${tx.id}`)}
                     onEdit={() => navigate(`/edit/${tx.id}`)}
                     onDelete={() => setPendingDeleteId(tx.id)}
                     editLabel={t('actions.edit')}
@@ -321,7 +384,9 @@ export default function History() {
                       <JarIcon jar={tx.jar} size={18} />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm">
-                          {t(`jars.${tx.jar}`)} · {String(t(`sub.${tx.subCategory}`, { defaultValue: tx.subCategory }))}
+                          {tx.type === 'income'
+                            ? String(t(`incomeCat.${tx.subCategory}`, { defaultValue: tx.subCategory }))
+                            : `${t(`jars.${tx.jar}`)} · ${String(t(`sub.${tx.subCategory}`, { defaultValue: tx.subCategory }))}`}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
                           {tx.date.slice(5)} · {tx.note || getMemberName(tx.memberId)}

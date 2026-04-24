@@ -1,138 +1,171 @@
 import { useState } from 'react';
-import { useBudgets, useTransactions, useCurrency } from '@/hooks/useStore';
-import { JARS } from '@/types';
-import type { Budget, JarId } from '@/types';
+import { useTransactions, useCurrency, usePeriodBudgets } from '@/hooks/useStore';
+import { BUDGET_PERIOD_DAYS } from '@/types';
+import type { BudgetPeriod, PeriodBudget } from '@/types';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { JarIcon } from '@/components/JarIcon';
-import { Plus, X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+const LIVING_CATEGORIES = ['Food', 'Transport', 'Necessities', 'Other'] as const;
+const PERIOD_CAT_ICONS: Record<string, string> = {
+  Food: '🍽️', Transport: '🚗', Necessities: '🛒', Other: '•••',
+};
+
 export default function BudgetPage() {
-  const { budgets, save, remove } = useBudgets();
   const { transactions } = useTransactions();
   const { format } = useCurrency();
   const { t, i18n } = useTranslation();
-  const [adding, setAdding] = useState(false);
-  const [newJar, setNewJar] = useState<JarId>('living');
-  const [newAmount, setNewAmount] = useState('');
+
+  const [activePeriod, setActivePeriod] = useState<BudgetPeriod>('early');
+  const [editingAmounts, setEditingAmounts] = useState<Record<string, string>>({});
+  const [savedCats, setSavedCats] = useState<Set<string>>(new Set());
 
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
-  const monthBudgets = budgets.filter(b => b.month === currentMonth);
-  const monthExpenses = transactions.filter(t => t.type === 'expense' && t.date.startsWith(currentMonth));
+  const { periodBudgets, save: savePeriodBudget, remove: removePeriodBudget } = usePeriodBudgets(currentMonth);
 
-  const getSpent = (jar: JarId) =>
-    monthExpenses.filter(t => t.jar === jar).reduce((s, t) => s + t.amount, 0);
-
-  const handleAdd = async () => {
-    if (!newAmount) return;
-    const budget: Budget = {
-      id: `${currentMonth}-${newJar}`,
-      jar: newJar,
-      amount: parseFloat(newAmount),
-      month: currentMonth,
-    };
-    await save(budget);
-    setAdding(false);
-    setNewAmount('');
+  const getPeriodSpent = (period: BudgetPeriod, category: string) => {
+    const range = BUDGET_PERIOD_DAYS[period];
+    const endDay = Math.min(range.end, lastDayOfMonth);
+    const start = `${currentMonth}-${String(range.start).padStart(2, '0')}`;
+    const end = `${currentMonth}-${String(endDay).padStart(2, '0')}`;
+    return transactions
+      .filter(tx =>
+        tx.type === 'expense' &&
+        tx.jar === 'living' &&
+        tx.mainCategory === category &&
+        tx.date >= start &&
+        tx.date <= end
+      )
+      .reduce((s, tx) => s + tx.amount, 0);
   };
 
-  const usedJars = monthBudgets.map(b => b.jar);
-  const availableJars = JARS.filter(j => !usedJars.includes(j.id));
+  const getPeriodBudget = (period: BudgetPeriod, category: string) =>
+    periodBudgets.find(pb => pb.period === period && pb.category === category);
+
+  const handleSavePeriod = async (period: BudgetPeriod, category: string) => {
+    const key = `${period}-${category}`;
+    const raw = editingAmounts[key];
+    const amount = raw !== undefined ? parseFloat(raw) : NaN;
+    if (!Number.isFinite(amount) || amount < 0) return;
+    const pb: PeriodBudget = {
+      id: `${currentMonth}-${period}-${category}`,
+      yearMonth: currentMonth,
+      period,
+      category,
+      targetAmount: amount,
+    };
+    await savePeriodBudget(pb);
+    setSavedCats(prev => new Set(prev).add(key));
+    setTimeout(() => setSavedCats(prev => { const s = new Set(prev); s.delete(key); return s; }), 1500);
+  };
+
+  const handleRemovePeriod = async (pb: PeriodBudget) => {
+    await removePeriodBudget(pb.id);
+    const key = `${pb.period}-${pb.category}`;
+    setEditingAmounts(prev => { const n = { ...prev }; delete n[key]; return n; });
+  };
+
+  const periodRangeLabel = (p: BudgetPeriod) => {
+    const r = BUDGET_PERIOD_DAYS[p];
+    const end = p === 'late' ? lastDayOfMonth : r.end;
+    return `${r.start}–${end}${t('period.dayUnit')}`;
+  };
 
   return (
     <div className="min-h-screen pb-safe">
       <div className="px-5 pb-4 pt-safe">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t('budget.title')}</h1>
+          <h1 className="text-2xl font-bold">{t('budget.tabPeriod')}</h1>
           <p className="text-sm text-muted-foreground">
             {now.toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' })}
           </p>
         </div>
       </div>
 
-      <div className="px-5 space-y-3">
-        {monthBudgets.length === 0 && !adding && (
-          <p className="text-center text-muted-foreground py-12 text-sm">
-            {t('budget.subtitle')}
-          </p>
-        )}
+      <div className="px-5 space-y-4">
+        <p className="text-xs text-muted-foreground">{t('budget.periodHint')}</p>
 
-        {monthBudgets.map(b => {
-          const spent = getSpent(b.jar);
-          const pct = b.amount === 0 ? 0 : Math.min((spent / b.amount) * 100, 100);
-          const over = b.amount > 0 && spent > b.amount;
-          return (
-            <div key={b.id} className="rounded-xl bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-3 mb-3">
-                <JarIcon jar={b.jar} size={18} />
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{t(`jars.${b.jar}`)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(spent)} / {format(b.amount)}
-                  </p>
+        {/* Period selector */}
+        <div className="flex gap-2">
+          {(['early', 'mid', 'late'] as BudgetPeriod[]).map(p => (
+            <button key={p} onClick={() => setActivePeriod(p)}
+              className={`flex-1 flex flex-col items-center rounded-xl py-2.5 px-1 transition-all ${
+                activePeriod === p ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-secondary text-muted-foreground'
+              }`}>
+              <span className="text-xs font-semibold">{t(`period.${p}`)}</span>
+              <span className="text-[10px] opacity-70">{periodRangeLabel(p)}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Category rows */}
+        <div className="space-y-2">
+          {LIVING_CATEGORIES.map(cat => {
+            const key = `${activePeriod}-${cat}`;
+            const existing = getPeriodBudget(activePeriod, cat);
+            const spent = getPeriodSpent(activePeriod, cat);
+            const targetAmount = existing?.targetAmount ?? 0;
+            const inputVal = editingAmounts[key] ?? (existing ? String(existing.targetAmount) : '');
+            const pct = targetAmount > 0 ? Math.min(100, Math.round((spent / targetAmount) * 100)) : 0;
+            const over = targetAmount > 0 && spent > targetAmount;
+            const justSaved = savedCats.has(key);
+
+            return (
+              <div key={cat} className="rounded-xl bg-card p-3.5 shadow-sm border border-border">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="text-lg leading-none">{PERIOD_CAT_ICONS[cat]}</span>
+                  <span className="text-sm font-medium flex-1">{t(`mainCat.${cat}`, { defaultValue: cat })}</span>
+                  {existing && (
+                    <button onClick={() => handleRemovePeriod(existing)} className="text-muted-foreground/60 p-1">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
-                <button
-                  onClick={() => remove(b.id)}
-                  className="flex h-11 w-11 items-center justify-center text-muted-foreground"
-                  aria-label="Remove budget"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    placeholder={t('budget.setTarget')}
+                    value={inputVal}
+                    onChange={e => setEditingAmounts(prev => ({ ...prev, [key]: e.target.value }))}
+                    className="h-9 rounded-lg text-sm flex-1"
+                  />
+                  <button
+                    onClick={() => handleSavePeriod(activePeriod, cat)}
+                    disabled={!inputVal}
+                    className={`h-9 w-9 flex items-center justify-center rounded-lg transition-colors shrink-0 ${
+                      justSaved ? 'bg-emerald-500 text-white' : 'bg-primary text-primary-foreground disabled:opacity-30'
+                    }`}>
+                    <Check className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {existing && targetAmount > 0 && (
+                  <div className="mt-2.5 space-y-1">
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${pct}%`,
+                          background: over ? '#EF4444' : pct >= 70 ? '#F59E0B' : '#10B981',
+                        }} />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>{format(spent)} {t('budget.spent')}</span>
+                      <span className={over ? 'text-destructive font-medium' : ''}>
+                        {over ? `+${format(spent - targetAmount)} ${t('budget.over')}` : `${format(targetAmount - spent)} ${t('budget.remaining')}`}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <Progress value={pct} className={`h-2 ${over ? '[&>div]:bg-destructive' : '[&>div]:bg-primary'}`} />
-              {over && (
-                <p className="text-xs text-destructive font-medium mt-1">
-                  {t('budget.over')} {format(spent - b.amount)}
-                </p>
-              )}
-            </div>
-          );
-        })}
-
-        {adding && (
-          <div className="rounded-xl bg-card p-4 shadow-sm space-y-3">
-            <div className="flex flex-wrap gap-2">
-              {availableJars.map(j => (
-                <button
-                  key={j.id}
-                  onClick={() => setNewJar(j.id)}
-                  className={`min-h-[40px] rounded-full px-4 py-2 text-sm font-medium ${
-                    newJar === j.id ? 'text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-                  }`}
-                  style={newJar === j.id ? { backgroundColor: j.color } : undefined}
-                >
-                  {t(`jars.${j.id}`)}
-                </button>
-              ))}
-            </div>
-            <Input
-              type="number"
-              placeholder={t('budget.setBudget')}
-              value={newAmount}
-              onChange={e => setNewAmount(e.target.value)}
-              className="rounded-xl"
-              inputMode="decimal"
-              min="0"
-            />
-            <div className="flex gap-2">
-              <Button onClick={handleAdd} size="sm" className="rounded-xl" disabled={!newAmount}>{t('budget.save')}</Button>
-              <Button onClick={() => setAdding(false)} variant="ghost" size="sm">{t('budget.cancel')}</Button>
-            </div>
-          </div>
-        )}
-
-        {!adding && availableJars.length > 0 && (
-          <button
-            onClick={() => { setAdding(true); setNewJar(availableJars[0].id); }}
-            className="flex items-center gap-2 rounded-xl border-2 border-dashed border-border p-4 w-full text-muted-foreground text-sm"
-          >
-            <Plus className="h-4 w-4" /> {t('budget.setBudget')}
-          </button>
-        )}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

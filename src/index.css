@@ -61,22 +61,23 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+    /* iOS overscroll rubber-band shows body background — match the primary header blue */
+    background-color: hsl(220, 90%, 56%);
   }
 }
 
-/* Safe area: contentInset=always means the OS auto-insets scroll content.
-   #root padding ensures non-scroll layouts also respect the notch. */
 #root {
-  padding-top: env(safe-area-inset-top, 0px);
+  background-color: #ffffff;
+  min-height: 100dvh;
 }
 
-/* pt-safe: extra header padding on top of the global safe-area offset */
+/* pt-safe: header covers safe area + provides header height padding */
 .pt-safe {
-  padding-top: 3.5rem !important;
+  padding-top: env(safe-area-inset-top, 0px) !important;
 }
 
 .pb-safe {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6rem) !important;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6rem + var(--ad-banner-height, 0px)) !important;
 }
 
 .safe-bottom {
@@ -90,3 +91,8 @@
 /* Hide horizontal scrollbar on filter chip rows */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* Hide number input spinner arrows */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import * as localDb from '@/lib/db';
 import { useStorage } from '@/hooks/useStorage';
 import { supabase } from '@/lib/supabase';
-import type { Transaction, Budget, FamilyMember, JarBalance, JarId } from '@/types';
+import type { Transaction, Budget, FamilyMember, JarBalance, JarId, PeriodBudget, UtilityBill, SpecialExpense, SpecialExpensePayment } from '@/types';
 
 export function useTransactions() {
   const storage = useStorage();
@@ -205,4 +205,95 @@ export function useCurrency() {
   };
 
   return { currency, setCurrency, symbol, format, currencyLoading };
+}
+
+// ── 3구간 예산 ────────────────────────────────────────────────────────────────
+export function usePeriodBudgets(yearMonth?: string) {
+  const [periodBudgets, setPeriodBudgets] = useState<PeriodBudget[]>([]);
+
+  const refresh = useCallback(async () => {
+    const all = yearMonth
+      ? await localDb.getPeriodBudgetsByMonth(yearMonth)
+      : await localDb.getAllPeriodBudgets();
+    setPeriodBudgets(all);
+  }, [yearMonth]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const save = async (pb: PeriodBudget) => {
+    await localDb.savePeriodBudget(pb);
+    await refresh();
+  };
+
+  const remove = async (id: string) => {
+    await localDb.deletePeriodBudget(id);
+    await refresh();
+  };
+
+  return { periodBudgets, save, remove, refresh };
+}
+
+// ── 공과금 ────────────────────────────────────────────────────────────────────
+export function useUtilityBills() {
+  const [utilityBills, setUtilityBills] = useState<UtilityBill[]>([]);
+
+  const refresh = useCallback(async () => {
+    setUtilityBills(await localDb.getAllUtilityBills());
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const save = async (bill: UtilityBill) => {
+    await localDb.saveUtilityBill(bill);
+    await refresh();
+  };
+
+  const getByMonth = async (yearMonth: string): Promise<UtilityBill | undefined> => {
+    return localDb.getUtilityBill(yearMonth);
+  };
+
+  return { utilityBills, save, getByMonth, refresh };
+}
+
+// ── 특별지출 ──────────────────────────────────────────────────────────────────
+export function useSpecialExpenses() {
+  const [specialExpenses, setSpecialExpenses] = useState<SpecialExpense[]>([]);
+
+  const refresh = useCallback(async () => {
+    setSpecialExpenses(await localDb.getAllSpecialExpenses());
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const save = async (expense: SpecialExpense) => {
+    await localDb.saveSpecialExpense(expense);
+    await refresh();
+  };
+
+  const remove = async (id: string) => {
+    await localDb.deleteSpecialExpense(id);
+    await refresh();
+  };
+
+  const addPayment = async (expenseId: string, payment: SpecialExpensePayment) => {
+    const expense = specialExpenses.find(e => e.id === expenseId);
+    if (!expense) return;
+    await localDb.saveSpecialExpense({
+      ...expense,
+      payments: [...expense.payments, payment],
+    });
+    await refresh();
+  };
+
+  const removePayment = async (expenseId: string, paymentId: string) => {
+    const expense = specialExpenses.find(e => e.id === expenseId);
+    if (!expense) return;
+    await localDb.saveSpecialExpense({
+      ...expense,
+      payments: expense.payments.filter(p => p.id !== paymentId),
+    });
+    await refresh();
+  };
+
+  return { specialExpenses, save, remove, addPayment, removePayment, refresh };
 }

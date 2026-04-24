@@ -7,7 +7,8 @@
     "charts": "차트",
     "settings": "설정",
     "calendar": "달력",
-    "notifications": "알림"
+    "notifications": "알림",
+    "jars": "항아리"
   },
   "dashboard": {
     "balance": "총 잔액",
@@ -20,7 +21,10 @@
     "yourJars": "내 항아리",
     "thisMonth": "이번달",
     "thisYear": "올해",
-    "periodNet": "기간 순수익"
+    "periodNet": "기간 순수익",
+    "allocation": "배분",
+    "balanceSpentMonth": "이번달 잔액의 {{pct}}% 지출",
+    "balanceSpentYear": "올해 잔액의 {{pct}}% 지출"
   },
   "history": {
     "title": "내역",
@@ -44,10 +48,14 @@
   "budget": {
     "title": "예산",
     "subtitle": "항아리별 월 한도 설정",
+    "tabMonthly": "월 예산",
+    "tabPeriod": "구간 목표",
+    "periodHint": "한 달을 초반·중반·후반으로 나눠 카테고리별 목표를 설정합니다.",
+    "setTarget": "목표 금액",
     "spent": "사용",
     "of": "/",
     "remaining": "남음",
-    "over": "예산 초과",
+    "over": "초과",
     "setBudget": "예산 설정",
     "save": "저장",
     "cancel": "취소"
@@ -101,15 +109,85 @@
     "expense": "지출",
     "amount": "금액",
     "jar": "항아리",
+    "mainCategory": "대분류",
     "subCategory": "세부 항목",
     "date": "날짜",
     "note": "메모",
     "notePlaceholder": "메모 (선택)",
     "member": "구성원",
+    "payer": "결제자",
+    "shared": "공동",
+    "personalMoney": "개인돈 사용",
+    "personalMoneyHint": "나중에 공동 계좌에 입금",
     "save": "저장",
     "update": "수정",
     "noMembers": "먼저 가족 구성원을 추가하세요",
     "incomeHint": "수입은 배분에 따라 다섯 항아리로 자동 분배됩니다."
+  },
+  "period": {
+    "early": "초반",
+    "mid": "중반",
+    "late": "후반",
+    "dayUnit": "일",
+    "setBudget": "목표 설정",
+    "usagePct": "{{pct}}% 사용"
+  },
+  "incomeCat": {
+    "Salary": "월급",
+    "Bonus": "보너스",
+    "Asset Adjustment": "자산수정",
+    "Other": "기타"
+  },
+  "mainCat": {
+    "Food": "식비",
+    "Transport": "교통",
+    "Utilities": "공과금",
+    "Necessities": "생필품",
+    "Culture": "문화",
+    "Education": "교육",
+    "Fashion": "패션",
+    "Health": "건강",
+    "Beauty": "뷰티",
+    "Travel": "여행",
+    "Other": "기타"
+  },
+  "livingSub": {
+    "Eating Out": "외식",
+    "Groceries": "식료품",
+    "Snacks": "간식",
+    "Bus/Subway": "버스/지하철",
+    "Taxi": "택시",
+    "Fuel": "주유",
+    "Parking": "주차",
+    "Household": "생활용품",
+    "Hygiene": "위생용품",
+    "Kitchen": "주방용품",
+    "Movies": "영화",
+    "Concert": "공연",
+    "Hobby": "취미",
+    "Games": "게임",
+    "Tuition": "수업료",
+    "Books": "도서",
+    "Online Course": "온라인강의",
+    "Stationery": "문구류",
+    "Clothing": "의류",
+    "Shoes": "신발",
+    "Accessories": "액세서리",
+    "Hospital": "병원",
+    "Pharmacy": "약국",
+    "Fitness": "헬스",
+    "Haircut": "미용실",
+    "Skincare": "스킨케어",
+    "Cosmetics": "화장품",
+    "Accommodation": "숙박",
+    "Flight": "항공",
+    "Activities": "액티비티",
+    "Water": "수도세",
+    "Electricity": "전기세",
+    "Gas": "가스",
+    "Internet": "인터넷",
+    "Telecom": "통신비",
+    "Special Expense": "특별지출"
   },
   "jars": {
     "giving": "기부",
@@ -122,6 +200,17 @@
     "savingsDesc": "비상금과 큰 지출",
     "livingDesc": "일상 지출",
     "seedDesc": "기회와 돕기"
+  },
+  "utility": {
+    "title": "공과금",
+    "water": "수도세",
+    "electricity": "전기세",
+    "gas": "가스",
+    "internet": "인터넷",
+    "telecom": "통신비",
+    "bimonthly": "격월",
+    "monthlyAvg": "월평균 (수도 ÷2)",
+    "save": "저장"
   },
   "receipt": {
     "scanTitle": "영수증 스캔",
@@ -173,6 +262,25 @@
     "noMembersHint": "설정 › 멤버에서 먼저 추가해주세요",
     "confirm": "선택 완료"
   },
+  "special": {
+    "title": "특별지출",
+    "empty": "특별지출 항목이 없습니다",
+    "emptyHint": "+ 버튼으로 추가하세요",
+    "addTitle": "특별지출 추가",
+    "namePlaceholder": "이름 (예: 한국행 비행기)",
+    "totalPlaceholder": "총 금액",
+    "funding": "재원",
+    "fund_bonus": "보너스",
+    "fund_reserve": "예비비",
+    "fund_monthly": "월별",
+    "memoPlaceholder": "메모 (선택)",
+    "save": "저장",
+    "remaining": "남음",
+    "over": "초과",
+    "addPayment": "지출 추가",
+    "paymentDetails": "지출 내역",
+    "amount": "금액"
+  },
   "sub": {
     "Donation": "기부",
     "Charity": "자선",
@@ -197,5 +305,29 @@
     "Helping Others": "돕기",
     "Business": "사업",
     "Other": "기타"
+  },
+  "paywall": {
+    "title": "프리미엄으로 업그레이드",
+    "subtitle": "광고 없이, 더 스마트하게 관리하세요",
+    "benefit1": "광고 없이 사용",
+    "benefit2": "3인 이상 가계부 공유",
+    "benefit3": "데이터 백업 및 내보내기",
+    "monthly": "월간 플랜",
+    "annual": "연간 플랜",
+    "priceMonthly": "₩1,000 / 월",
+    "priceAnnual": "₩10,000 / 년 (월 ₩833)",
+    "bestValue": "최대 할인",
+    "cta": "구독 시작하기",
+    "legal": "구독은 언제든지 취소할 수 있습니다",
+    "manage": "구독 관리",
+    "active": "프리미엄 이용 중",
+    "gateExport": "내보내기는 프리미엄 기능입니다",
+    "gateMember": "3인 이상 공유는 프리미엄 기능입니다"
+  },
+  "subscription": {
+    "title": "구독",
+    "premium": "프리미엄",
+    "free": "무료",
+    "upgrade": "업그레이드"
   }
 }

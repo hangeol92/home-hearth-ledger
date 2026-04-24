@@ -1,8 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ChevronLeft, Plus, Eye, EyeOff, Trash2, Check, X, Pencil } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useTransactions, useMembers, useCurrency } from '@/hooks/useStore';
-import { JARS, JAR_SUBCATEGORIES, SUBCATEGORY_ICONS, MEMBER_ROLES, MEMBER_COLORS, MEMBER_EMOJI_OPTIONS, type MemberRole } from '@/types';
+import { JARS, JAR_SUBCATEGORIES, SUBCATEGORY_ICONS, LIVING_SUBCATEGORIES, LIVING_MAIN_CATEGORY_ICONS, INCOME_MAIN_CATEGORIES, INCOME_CATEGORY_ICONS, CATEGORY_EMOJI_OPTIONS, MEMBER_ROLES, MEMBER_COLORS, MEMBER_EMOJI_OPTIONS, type MemberRole, type LivingMainCategory, type IncomeMainCategory } from '@/types';
+import { useCustomCategories } from '@/hooks/useCustomCategories';
 import type { Transaction, TransactionType, JarId, FamilyMember } from '@/types';
 import type { ReceiptParseResult } from '@/utils/receiptParser';
 import { Button } from '@/components/ui/button';
@@ -279,7 +290,8 @@ export default function AddTransaction() {
   const { state } = useLocation();
   const isEdit = Boolean(id);
 
-  const { transactions, add, update } = useTransactions();
+  const { transactions, add, update, remove } = useTransactions();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { members, save: saveMember, remove: removeMember } = useMembers();
   const { symbol } = useCurrency();
   const { t } = useTranslation();
@@ -301,6 +313,17 @@ export default function AddTransaction() {
   );
   const [memberId, setMemberId] = useState('');
   const [showManage, setShowManage] = useState(false);
+  const [mainCategory, setMainCategory] = useState<string>('Food');
+  const [incomeCategory, setIncomeCategory] = useState<IncomeMainCategory>('Salary');
+  const { customMain, customSubs, addMainCategory, addSubCategory } = useCustomCategories();
+  const [addingMainCat, setAddingMainCat] = useState(false);
+  const [newMainName, setNewMainName] = useState('');
+  const [newMainEmoji, setNewMainEmoji] = useState('📁');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [addingSubCat, setAddingSubCat] = useState(false);
+  const [newSubName, setNewSubName] = useState('');
+  const [payer, setPayer] = useState<string>('shared');
+  const [isPersonalMoney, setIsPersonalMoney] = useState(false);
 
   useEffect(() => {
     if (!isEdit || !id) return;
@@ -313,13 +336,20 @@ export default function AddTransaction() {
     setNote(tx.note);
     setDate(tx.date);
     setMemberId(tx.memberId);
+    if (tx.mainCategory) setMainCategory(tx.mainCategory as LivingMainCategory);
+    if (tx.type === 'income' && tx.subCategory) setIncomeCategory(tx.subCategory as IncomeMainCategory);
+    if (tx.payer) setPayer(tx.payer);
+    if (tx.isPersonalMoney != null) setIsPersonalMoney(tx.isPersonalMoney);
   }, [id, isEdit, transactions]);
 
   const visibleMembers = members.filter(m => !m.hidden);
   const memberByRole = new Map(visibleMembers.filter(m => m.role).map(m => [m.role!, m]));
   const customMembers = visibleMembers.filter(m => !m.role);
 
-  const subCats = JAR_SUBCATEGORIES[jar];
+  const isLivingExpense = type === 'expense' && jar === 'living';
+  const builtInSubs = LIVING_SUBCATEGORIES[mainCategory as LivingMainCategory] ?? [];
+  const livingSubCats = [...builtInSubs, ...(customSubs[mainCategory] ?? [])];
+  const subCats = isLivingExpense ? livingSubCats : JAR_SUBCATEGORIES[jar];
   const parsedAmount = parseFloat(amount);
   const amountValid = Number.isFinite(parsedAmount) && parsedAmount > 0;
 
@@ -332,18 +362,24 @@ export default function AddTransaction() {
 
   const handleSave = async () => {
     if (!amountValid) return;
+    const extraFields = {
+      mainCategory: isLivingExpense ? mainCategory : undefined,
+      payer: type === 'expense' ? payer : undefined,
+      isPersonalMoney: type === 'expense' && payer !== 'shared' ? isPersonalMoney : undefined,
+    };
     if (isEdit && id) {
       const original = transactions.find(t => t.id === id);
       if (!original) return;
-      await update({ ...original, type, amount: parsedAmount, jar, subCategory, note, date, memberId });
+      await update({ ...original, type, amount: parsedAmount, jar, subCategory, note, date, memberId, ...extraFields });
     } else {
       await add({
         id: crypto.randomUUID(), type,
         amount: parsedAmount,
         jar: type === 'income' ? undefined as unknown as JarId : jar,
-        subCategory: type === 'income' ? '' : subCategory,
+        subCategory: type === 'income' ? incomeCategory : subCategory,
         note, date, memberId,
         createdAt: new Date().toISOString(),
+        ...extraFields,
       });
     }
     navigate(-1);
@@ -367,10 +403,35 @@ export default function AddTransaction() {
           aria-label="Back">
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <h1 className="text-lg font-semibold">
+        <h1 className="text-lg font-semibold flex-1">
           {isEdit ? t('add.editTitle') : t('add.title')}
         </h1>
+        {isEdit && (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-destructive active:bg-secondary"
+            aria-label="Delete">
+            <Trash2 className="h-5 w-5" />
+          </button>
+        )}
       </div>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('actions.confirmDeleteTx')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('actions.confirmDeleteTxDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => { if (id) { await remove(id); navigate(-1); } }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {t('actions.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="px-5 space-y-6">
         {/* Member selector */}
@@ -382,26 +443,27 @@ export default function AddTransaction() {
               <Pencil className="h-3 w-3" /> Edit
             </button>
           </div>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="flex flex-wrap gap-2">
             {MEMBER_ROLES.map(def => {
               const registered = memberByRole.get(def.id);
-              const active = registered ? memberId === registered.id : false;
-              const displayEmoji = registered?.emoji ?? def.emoji;
+              if (!registered) return null;
+              const active = memberId === registered.id;
+              const displayEmoji = registered.emoji ?? def.emoji;
               return (
                 <button key={def.id}
                   onClick={() => handleRoleTap(def.id)}
-                  disabled={!registered}
-                  className={`flex flex-col items-center gap-1 rounded-xl p-2 transition-all ${registered ? 'active:scale-95' : 'opacity-25'}`}
+                  className="flex flex-col items-center gap-1 rounded-xl p-2 transition-all active:scale-95"
                   style={{
                     backgroundColor: active ? `${def.color}25` : 'hsl(var(--secondary))',
                     outline: active ? `2px solid ${def.color}` : 'none',
+                    minWidth: 64,
                   }}>
                   <div className="flex items-center justify-center rounded-xl"
                     style={{ backgroundColor: `${def.color}20`, width: 32, height: 32 }}>
                     <span style={{ fontSize: 16 }}>{displayEmoji}</span>
                   </div>
                   <span className="text-[10px] font-medium leading-tight text-center w-full truncate">
-                    {registered ? registered.name : t(def.labelKey)}
+                    {registered.name}
                   </span>
                 </button>
               );
@@ -444,13 +506,13 @@ export default function AddTransaction() {
           <label className="text-sm font-medium text-muted-foreground mb-2 block">{t('add.amount')}</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold text-muted-foreground">{symbol}</span>
-            <Input type="number" value={amount} onChange={e => setAmount(e.target.value)}
+            <Input type="text" value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
               placeholder="0" className="pl-8 text-2xl font-bold h-14 rounded-xl"
-              inputMode="decimal" min="0" step="any" />
+              inputMode="decimal" pattern="[0-9]*" />
           </div>
         </div>
 
-        {/* Jar + subCategory */}
+        {/* Jar + category */}
         {type === 'expense' ? (
           <>
             <div>
@@ -460,7 +522,15 @@ export default function AddTransaction() {
                   const active = jar === j.id;
                   return (
                     <button key={j.id}
-                      onClick={() => { setJar(j.id); setSubCategory(JAR_SUBCATEGORIES[j.id][0]); }}
+                      onClick={() => {
+                        setJar(j.id);
+                        if (j.id === 'living') {
+                          setMainCategory('Food');
+                          setSubCategory(LIVING_SUBCATEGORIES.Food[0] ?? '');
+                        } else {
+                          setSubCategory(JAR_SUBCATEGORIES[j.id][0]);
+                        }
+                      }}
                       className="flex flex-col items-center gap-1.5 rounded-xl p-2 transition-all"
                       style={{ backgroundColor: active ? `${j.color}25` : 'hsl(var(--secondary))', outline: active ? `2px solid ${j.color}` : 'none' }}>
                       <JarIcon jar={j.id} size={18} />
@@ -470,32 +540,239 @@ export default function AddTransaction() {
                 })}
               </div>
             </div>
+
+            {/* Living 2-depth category */}
+            {isLivingExpense ? (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">{t('add.mainCategory')}</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(Object.keys(LIVING_MAIN_CATEGORY_ICONS) as LivingMainCategory[]).map(cat => {
+                      const active = mainCategory === cat;
+                      return (
+                        <button key={cat} onClick={() => {
+                          setMainCategory(cat);
+                          const subs = [...(LIVING_SUBCATEGORIES[cat] ?? []), ...(customSubs[cat] ?? [])];
+                          setSubCategory(subs.length > 0 ? subs[0] : '');
+                          setAddingSubCat(false);
+                        }}
+                          className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all active:scale-95"
+                          style={{ backgroundColor: active ? '#10B98125' : 'hsl(var(--secondary))', outline: active ? '2px solid #10B981' : 'none' }}>
+                          <span className="text-xl leading-none">{LIVING_MAIN_CATEGORY_ICONS[cat]}</span>
+                          <span className="text-[10px] font-medium text-center leading-tight w-full truncate px-0.5" style={{ color: active ? '#10B981' : undefined }}>
+                            {t(`mainCat.${cat}`, { defaultValue: cat })}
+                          </span>
+                        </button>
+                      );
+                    })}
+                    {customMain.map(cat => {
+                      const active = mainCategory === cat.id;
+                      return (
+                        <button key={cat.id} onClick={() => {
+                          setMainCategory(cat.id);
+                          setSubCategory(customSubs[cat.id]?.[0] ?? '');
+                          setAddingSubCat(false);
+                        }}
+                          className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all active:scale-95"
+                          style={{ backgroundColor: active ? '#10B98125' : 'hsl(var(--secondary))', outline: active ? '2px solid #10B981' : 'none' }}>
+                          <span className="text-xl leading-none">{cat.emoji || '📁'}</span>
+                          <span className="text-[10px] font-medium text-center leading-tight w-full truncate px-0.5" style={{ color: active ? '#10B981' : undefined }}>
+                            {cat.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                    {/* + 추가 버튼 */}
+                    <button onClick={() => { setAddingMainCat(v => !v); setNewMainName(''); setNewMainEmoji(''); }}
+                      className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 border-2 border-dashed border-gray-200 active:scale-95">
+                      <span className="text-xl leading-none">＋</span>
+                      <span className="text-[10px] font-medium text-center text-gray-400">추가</span>
+                    </button>
+                  </div>
+                  {addingMainCat && (
+                    <div className="mt-2 space-y-2">
+                      <div className="flex gap-2 items-center">
+                        {/* 이모지 선택 버튼 */}
+                        <button
+                          onClick={() => setShowEmojiPicker(v => !v)}
+                          className="w-12 h-10 rounded-xl border-2 border-gray-200 text-xl flex items-center justify-center active:bg-gray-100"
+                        >
+                          {newMainEmoji}
+                        </button>
+                        <input value={newMainName} onChange={e => setNewMainName(e.target.value)}
+                          placeholder="카테고리 이름" autoFocus
+                          className="flex-1 h-10 rounded-xl border border-gray-200 px-3 text-sm focus:outline-none focus:border-teal-400"
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' && newMainName.trim()) {
+                              const id = addMainCategory(newMainName.trim(), newMainEmoji);
+                              setMainCategory(id); setSubCategory(''); setAddingMainCat(false); setShowEmojiPicker(false);
+                            }
+                          }} />
+                        <button onClick={() => {
+                          if (!newMainName.trim()) return;
+                          const id = addMainCategory(newMainName.trim(), newMainEmoji);
+                          setMainCategory(id); setSubCategory(''); setAddingMainCat(false); setShowEmojiPicker(false);
+                        }} className="h-10 px-3 rounded-xl bg-teal-500 text-white text-sm font-semibold shrink-0">확인</button>
+                      </div>
+                      {/* 이모지 피커 */}
+                      {showEmojiPicker && (
+                        <div className="rounded-xl border border-gray-200 bg-white p-2">
+                          <div className="flex flex-wrap gap-1">
+                            {CATEGORY_EMOJI_OPTIONS.map(e => (
+                              <button key={e} onClick={() => { setNewMainEmoji(e); setShowEmojiPicker(false); }}
+                                className={`h-9 w-9 text-xl rounded-lg flex items-center justify-center transition-all active:scale-90 ${newMainEmoji === e ? 'bg-teal-100 ring-2 ring-teal-400' : 'bg-gray-50 active:bg-gray-100'}`}>
+                                {e}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {(livingSubCats.length > 0 || true) && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground mb-2 block">{t('add.subCategory')}</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {livingSubCats.map(c => {
+                        const active = subCategory === c;
+                        const icon = SUBCATEGORY_ICONS[c];
+                        return (
+                          <button key={c} onClick={() => setSubCategory(c)}
+                            className="flex items-center justify-center gap-1 rounded-xl py-2.5 px-2 transition-all active:scale-95"
+                            style={{ backgroundColor: active ? '#10B98125' : 'hsl(var(--secondary))', outline: active ? '2px solid #10B981' : 'none' }}>
+                            {icon && <span className="text-sm leading-none">{icon}</span>}
+                            <span className="text-xs font-medium text-center truncate" style={{ color: active ? '#10B981' : undefined }}>
+                              {t(`livingSub.${c}`, { defaultValue: c })}
+                            </span>
+                          </button>
+                        );
+                      })}
+                      {/* + 세부항목 추가 */}
+                      <button onClick={() => { setAddingSubCat(v => !v); setNewSubName(''); }}
+                        className="flex items-center justify-center rounded-xl py-2.5 px-2 border-2 border-dashed border-gray-200 active:scale-95">
+                        <span className="text-xs font-medium text-gray-400">＋ 추가</span>
+                      </button>
+                    </div>
+                    {addingSubCat && (
+                      <div className="mt-2 flex gap-2 items-center">
+                        <input value={newSubName} onChange={e => setNewSubName(e.target.value)}
+                          placeholder="세부항목 이름"
+                          className="flex-1 h-10 rounded-xl border border-gray-200 px-3 text-sm focus:outline-none focus:border-teal-400"
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' && newSubName.trim()) {
+                              addSubCategory(mainCategory, newSubName.trim());
+                              setSubCategory(newSubName.trim()); setAddingSubCat(false);
+                            }
+                          }} />
+                        <button onClick={() => {
+                          if (!newSubName.trim()) return;
+                          addSubCategory(mainCategory, newSubName.trim());
+                          setSubCategory(newSubName.trim()); setAddingSubCat(false);
+                        }} className="h-10 px-3 rounded-xl bg-teal-500 text-white text-sm font-semibold">확인</button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">{t('add.subCategory')}</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {subCats.map(c => {
+                    const active = subCategory === c;
+                    const icon = SUBCATEGORY_ICONS[c] ?? '•••';
+                    return (
+                      <button key={c} onClick={() => setSubCategory(c)}
+                        className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all active:scale-95"
+                        style={{
+                          backgroundColor: active ? `${getJarColor(jar)}25` : 'hsl(var(--secondary))',
+                          outline: active ? `2px solid ${getJarColor(jar)}` : 'none',
+                        }}>
+                        <span className="text-xl leading-none">{icon}</span>
+                        <span className="text-[10px] font-medium text-center leading-tight w-full truncate px-0.5"
+                          style={{ color: active ? getJarColor(jar) : undefined }}>
+                          {t(`sub.${c}`, { defaultValue: c })}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Payer */}
             <div>
-              <label className="text-sm font-medium text-muted-foreground mb-2 block">{t('add.subCategory')}</label>
-              <div className="grid grid-cols-4 gap-2">
-                {subCats.map(c => {
-                  const active = subCategory === c;
-                  const icon = SUBCATEGORY_ICONS[c] ?? '•••';
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">{t('add.payer')}</label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => { setPayer('shared'); setIsPersonalMoney(false); }}
+                  className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-all"
+                  style={{
+                    backgroundColor: payer === 'shared' ? '#6B728025' : 'hsl(var(--secondary))',
+                    outline: payer === 'shared' ? '2px solid #6B7280' : 'none',
+                  }}>
+                  <span>🤝</span>
+                  <span>{t('add.shared')}</span>
+                </button>
+                {visibleMembers.map(m => {
+                  const emoji = m.emoji ?? (m.role ? MEMBER_ROLES.find(r => r.id === m.role)?.emoji : undefined) ?? m.name.charAt(0);
+                  const color = m.role ? (MEMBER_ROLES.find(r => r.id === m.role)?.color ?? m.color) : m.color;
+                  const active = payer === m.id;
                   return (
-                    <button key={c} onClick={() => setSubCategory(c)}
-                      className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all active:scale-95"
+                    <button key={m.id}
+                      onClick={() => setPayer(m.id)}
+                      className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-all"
                       style={{
-                        backgroundColor: active ? `${getJarColor(jar)}25` : 'hsl(var(--secondary))',
-                        outline: active ? `2px solid ${getJarColor(jar)}` : 'none',
+                        backgroundColor: active ? `${color}25` : 'hsl(var(--secondary))',
+                        outline: active ? `2px solid ${color}` : 'none',
                       }}>
-                      <span className="text-xl leading-none">{icon}</span>
-                      <span className="text-[10px] font-medium text-center leading-tight w-full truncate px-0.5"
-                        style={{ color: active ? getJarColor(jar) : undefined }}>
-                        {t(`sub.${c}`, { defaultValue: c })}
-                      </span>
+                      <span>{emoji}</span>
+                      <span>{m.name}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
+
+            {/* Personal money toggle */}
+            {payer !== 'shared' && (
+              <div className="flex items-center justify-between rounded-xl bg-secondary/60 px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium">{t('add.personalMoney')}</p>
+                  <p className="text-xs text-muted-foreground">{t('add.personalMoneyHint')}</p>
+                </div>
+                <button
+                  onClick={() => setIsPersonalMoney(v => !v)}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${isPersonalMoney ? 'bg-teal-500' : 'bg-gray-300'}`}>
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isPersonalMoney ? 'translate-x-5' : ''}`} />
+                </button>
+              </div>
+            )}
           </>
         ) : (
-          <div className="rounded-xl bg-secondary/50 p-4 text-sm text-muted-foreground">{t('add.incomeHint')}</div>
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">{t('add.mainCategory')}</label>
+            <div className="grid grid-cols-4 gap-2">
+              {INCOME_MAIN_CATEGORIES.map(cat => {
+                const active = incomeCategory === cat;
+                return (
+                  <button key={cat} onClick={() => setIncomeCategory(cat)}
+                    className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all active:scale-95"
+                    style={{
+                      backgroundColor: active ? '#2563d925' : 'hsl(var(--secondary))',
+                      outline: active ? '2px solid #2563d9' : 'none',
+                    }}>
+                    <span className="text-xl leading-none">{INCOME_CATEGORY_ICONS[cat]}</span>
+                    <span className="text-[10px] font-medium text-center leading-tight w-full truncate px-0.5"
+                      style={{ color: active ? '#2563d9' : undefined }}>
+                      {t(`incomeCat.${cat}`, { defaultValue: cat })}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         )}
 
         {/* Date */}

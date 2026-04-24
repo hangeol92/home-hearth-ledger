@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Five Jars</string>
+    <string name="title_activity_main">Five Jars</string>
+    <string name="package_name">com.homehearth.ledger</string>
+    <string name="custom_url_scheme">com.homehearth.ledger</string>
+</resources>
