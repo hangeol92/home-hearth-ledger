@@ -12,6 +12,21 @@ dist
 dist-ssr
 *.local
 
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Database backups
+backup_*.sql
+*.dump
+
+# Supabase temp
+supabase/.temp/
+
+# Claude Code
+.claude/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

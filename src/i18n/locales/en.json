@@ -79,7 +79,30 @@
     "totalPct": "Total",
     "resetBalances": "Reset jar balances",
     "confirmReset": "Reset all jar balances to zero?",
-    "invalidTotal": "Allocations must sum to 100%"
+    "invalidTotal": "Allocations must sum to 100%",
+    "account": "Account",
+    "login": "Log In",
+    "signup": "Sign Up",
+    "logout": "Log Out",
+    "ledger": "Ledger",
+    "sharedLedger": "Shared Ledger",
+    "data": "Data",
+    "appInfo": "About",
+    "help": "Help",
+    "contact": "Contact Us",
+    "version": "Version",
+    "clearDialogDesc": "All transactions, budgets, members, and jar data will be deleted. This cannot be undone.",
+    "passwordConfirm": "Confirm Password",
+    "clearing": "Deleting...",
+    "confirmClearBtn": "Delete All",
+    "householdSetup": "Set Up",
+    "loginRequired": "Login required",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "legal": {
+    "privacyTitle": "Privacy Policy",
+    "termsTitle": "Terms of Service"
   },
   "members": {
     "title": "Family Members",
@@ -309,6 +332,7 @@
   "paywall": {
     "title": "Upgrade to Premium",
     "subtitle": "No ads, smarter money management",
+    "tagline": "Ad-free · Backup · Share 3+",
     "benefit1": "Ad-free experience",
     "benefit2": "Share with 3+ members",
     "benefit3": "Data backup & export",

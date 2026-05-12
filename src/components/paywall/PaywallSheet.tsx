@@ -1,13 +1,18 @@
-import { useState } from 'react';
-import { X, Check, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Check, Sparkles, RotateCcw } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
-
-const PLANS = [
-  { id: 'annual',  labelKey: 'paywall.annual',  priceKey: 'paywall.priceAnnual',  badgeKey: 'paywall.bestValue' },
-  { id: 'monthly', labelKey: 'paywall.monthly', priceKey: 'paywall.priceMonthly', badgeKey: null },
-] as const;
+import { useNavigate } from 'react-router-dom';
+import {
+  isNative,
+  getOfferings,
+  purchasePackage,
+  restorePurchases,
+  isPremiumCustomer,
+} from '@/lib/purchases';
+import type { PurchasesPackage } from '@revenuecat/purchases-capacitor';
+import { useToast } from '@/hooks/use-toast';
 
 const BENEFITS = [
   { icon: '🚫', labelKey: 'paywall.benefit1' },
@@ -15,31 +20,94 @@ const BENEFITS = [
   { icon: '☁️', labelKey: 'paywall.benefit3' },
 ] as const;
 
+type PlanId = 'monthly' | 'annual';
+
+interface PlanOption {
+  id: PlanId;
+  labelKey: string;
+  badgeKey: string | null;
+  pkg: PurchasesPackage | null;
+  priceString: string;
+}
+
 export default function PaywallSheet() {
-  const { closePaywall } = useSubscription();
+  const { closePaywall, refresh } = useSubscription();
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>('annual');
   const [loading, setLoading] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [plans, setPlans] = useState<PlanOption[]>([
+    { id: 'annual',  labelKey: 'paywall.annual',  badgeKey: 'paywall.bestValue', pkg: null, priceString: t('paywall.priceAnnual') },
+    { id: 'monthly', labelKey: 'paywall.monthly', badgeKey: null,                pkg: null, priceString: t('paywall.priceMonthly') },
+  ]);
+
+  // RevenueCat에서 실제 상품 정보 로드
+  useEffect(() => {
+    if (!isNative) return;
+    getOfferings().then(offerings => {
+      const current = offerings?.current;
+      if (!current) return;
+      setPlans(prev => prev.map(p => {
+        const pkg = p.id === 'annual' ? current.annual : current.monthly;
+        if (!pkg) return p;
+        return { ...p, pkg, priceString: pkg.product.priceString };
+      }));
+    });
+  }, []);
 
   const handleSubscribe = async () => {
     if (!user) {
-      // TODO: 로그인 유도
       closePaywall();
+      navigate('/login');
+      return;
+    }
+    if (!isNative) {
+      // 웹: 실제 결제 없음 (향후 Stripe 연동 예정)
+      toast({ description: '모바일 앱에서 구독해 주세요.', duration: 3000 });
+      return;
+    }
+    const plan = plans.find(p => p.id === selectedPlan);
+    if (!plan?.pkg) {
+      toast({ description: '상품 정보를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.', variant: 'destructive', duration: 3000 });
       return;
     }
     setLoading(true);
     try {
-      // TODO: 플랫폼 감지 후 분기
-      // - iOS/Android: RevenueCat SDK 호출
-      //   import Purchases from '@revenuecat/purchases-capacitor';
-      //   await Purchases.purchasePackage({ aPackage: ... });
-      // - Web: Stripe Checkout 세션 생성
-      //   const { url } = await createStripeCheckoutSession(selectedPlan);
-      //   window.location.href = url;
-      alert('결제 연동 준비 중입니다. (RevenueCat / Stripe)');
+      await purchasePackage(plan.pkg);
+      await refresh();
+      closePaywall();
+      toast({ description: '🎉 프리미엄 구독이 시작됐습니다!' });
+    } catch (e: any) {
+      // USER_CANCELLED는 에러 아님
+      if (e?.code !== 'USER_CANCELLED' && e?.userCancelled !== true) {
+        toast({ description: '결제 중 오류가 발생했습니다.', variant: 'destructive', duration: 3000 });
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!isNative) return;
+    setRestoring(true);
+    try {
+      const info = await restorePurchases();
+      const active = isPremiumCustomer(info);
+      await refresh();
+      if (active) {
+        toast({ description: '✓ 구독이 복원됐습니다.' });
+        closePaywall();
+      } else {
+        toast({ description: '복원할 구독 내역이 없습니다.', duration: 3000 });
+      }
+    } catch {
+      toast({ description: '복원 중 오류가 발생했습니다.', variant: 'destructive', duration: 3000 });
+    } finally {
+      setRestoring(false);
     }
   };
 
@@ -78,7 +146,7 @@ export default function PaywallSheet() {
 
           {/* 플랜 선택 */}
           <div className="space-y-2 mb-6">
-            {PLANS.map(plan => (
+            {plans.map(plan => (
               <button
                 key={plan.id}
                 onClick={() => setSelectedPlan(plan.id)}
@@ -101,7 +169,7 @@ export default function PaywallSheet() {
                       )}
                     </div>
                     <p className={`text-xs mt-0.5 ${selectedPlan === plan.id ? 'text-white/70' : 'text-gray-400'}`}>
-                      {t(plan.priceKey)}
+                      {plan.priceString}
                     </p>
                   </div>
                   <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
@@ -117,14 +185,27 @@ export default function PaywallSheet() {
           {/* CTA */}
           <button
             onClick={handleSubscribe}
-            disabled={loading}
+            disabled={loading || restoring}
             className="w-full h-14 rounded-2xl bg-gray-900 text-white font-bold text-base disabled:opacity-50 active:scale-[0.98] transition-transform"
           >
-            {loading ? '처리 중...' : t('paywall.cta')}
+            {loading ? t('settings.clearing') : t('paywall.cta')}
           </button>
+
           <p className="text-center text-[11px] text-gray-400 mt-3">
             {t('paywall.legal')}
           </p>
+
+          {/* 구매 복원 (App Store 필수 요건) */}
+          {isNative && (
+            <button
+              onClick={handleRestore}
+              disabled={loading || restoring}
+              className="mt-4 w-full flex items-center justify-center gap-1.5 py-2 text-xs text-gray-400 active:opacity-60 disabled:opacity-40"
+            >
+              <RotateCcw className="h-3 w-3" />
+              {restoring ? '복원 중...' : t('paywall.manage')}
+            </button>
+          )}
         </div>
       </div>
     </div>

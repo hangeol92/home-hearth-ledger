@@ -1,25 +1,12 @@
 import { useState } from 'react';
 import { useTransactions, useCurrency, useJars } from '@/hooks/useStore';
 import { JARS } from '@/types';
-import type { JarId, JarBalance, Transaction } from '@/types';
+import type { JarId } from '@/types';
 import { JarIcon } from '@/components/JarIcon';
 import { useTranslation } from 'react-i18next';
+import { toYearMonth, computePeriodNet } from '@/lib/utils';
 
 type Period = 'month' | 'year';
-
-function computePeriodNet(jarId: JarId, txs: Transaction[], allJars: JarBalance[]): number {
-  return txs.reduce((sum, tx) => {
-    if (tx.type === 'income') {
-      const snap = tx.allocationSnapshot;
-      const totalPct = allJars.reduce((s, j) => s + (snap?.[j.id] ?? j.allocationPct), 0) || 100;
-      const jarPct = snap?.[jarId] ?? allJars.find(j => j.id === jarId)?.allocationPct ?? 0;
-      return sum + tx.amount * (jarPct / totalPct);
-    } else if (tx.jar === jarId) {
-      return sum - tx.amount;
-    }
-    return sum;
-  }, 0);
-}
 
 export default function JarsPage() {
   const { transactions } = useTransactions();
@@ -29,15 +16,11 @@ export default function JarsPage() {
 
   const [period, setPeriod] = useState<Period>('month');
 
-  const firstVisible = JARS.find(def => {
-    const j = jars.find(x => x.id === def.id);
-    return (j?.allocationPct ?? def.defaultPct) > 0;
-  });
-  const [activeJarId, setActiveJarId] = useState<JarId>(firstVisible?.id ?? 'living');
+  const [activeJarId, setActiveJarId] = useState<JarId>(JARS[0].id);
 
   const now = new Date();
   const yearPrefix = now.getFullYear().toString();
-  const monthPrefix = `${yearPrefix}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const monthPrefix = toYearMonth(now);
   const prefix = period === 'month' ? monthPrefix : yearPrefix;
   const periodTxs = transactions.filter(tx => tx.date.startsWith(prefix));
 
@@ -123,7 +106,6 @@ export default function JarsPage() {
           {JARS.map(def => {
             const j = jars.find(x => x.id === def.id);
             const pct = j?.allocationPct ?? def.defaultPct;
-            if (pct === 0) return null;
             const net = computePeriodNet(def.id, periodTxs, jars);
             const isActive = activeJarId === def.id;
 

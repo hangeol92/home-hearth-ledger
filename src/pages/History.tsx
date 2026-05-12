@@ -6,7 +6,7 @@ import type { JarId } from '@/types';
 import { JarIcon } from '@/components/JarIcon';
 import { Trash2, Pencil, ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { getTxColorClass, filterByMember } from '@/lib/utils';
+import { getTxColorClass, filterByMember, toYearMonth, shiftMonth } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -121,17 +121,6 @@ function SwipeRow({
       </div>
     </div>
   );
-}
-
-// ── Month helpers ──────────────────────────────────────────────────────────
-function toYearMonth(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-}
-
-function shiftMonth(ym: string, delta: number) {
-  const [y, m] = ym.split('-').map(Number);
-  const d = new Date(y, m - 1 + delta, 1);
-  return toYearMonth(d);
 }
 
 // ── Main page ──────────────────────────────────────────────────────────────
@@ -314,14 +303,14 @@ export default function History() {
             <button
               key={j.id}
               onClick={() => setFilterJar(filterJar === j.id ? 'all' : j.id)}
-              className="shrink-0 flex min-h-[40px] items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              className="shrink-0 flex min-h-[40px] items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors"
               style={
                 filterJar === j.id
-                  ? { backgroundColor: 'transparent', color: j.color, border: `2px solid ${j.color}` }
-                  : { backgroundColor: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))', border: '2px solid transparent' }
+                  ? { backgroundColor: j.color, color: '#fff' }
+                  : { backgroundColor: 'hsl(var(--secondary))', color: '#4e5968' }
               }
             >
-              <JarIcon jar={j.id} size={13} />
+              {filterJar !== j.id && <JarIcon jar={j.id} size={13} />}
               {t(`jars.${j.id}`)}
             </button>
           ))}
@@ -381,9 +370,12 @@ export default function History() {
                     deleteLabel={t('actions.delete')}
                   >
                     <div className="flex items-center gap-3 p-3">
-                      <JarIcon jar={tx.jar} size={18} />
+                      {tx.type === 'income'
+                        ? <div className="flex shrink-0 items-center justify-center rounded-xl" style={{ width: 34, height: 34, background: '#f4f4f5' }}><span style={{ fontSize: 18 }}>💼</span></div>
+                        : <JarIcon jar={tx.jar} size={18} />
+                      }
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">
+                        <p className="font-semibold text-sm">
                           {tx.type === 'income'
                             ? String(t(`incomeCat.${tx.subCategory}`, { defaultValue: tx.subCategory }))
                             : `${t(`jars.${tx.jar}`)} · ${String(t(`sub.${tx.subCategory}`, { defaultValue: tx.subCategory }))}`}

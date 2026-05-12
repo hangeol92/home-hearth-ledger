@@ -79,7 +79,30 @@
     "totalPct": "合計",
     "resetBalances": "壺の残高をリセット",
     "confirmReset": "すべての壺の残高をゼロにしますか？",
-    "invalidTotal": "配分の合計は100%にしてください"
+    "invalidTotal": "配分の合計は100%にしてください",
+    "account": "アカウント",
+    "login": "ログイン",
+    "signup": "新規登録",
+    "logout": "ログアウト",
+    "ledger": "家計簿",
+    "sharedLedger": "共有家計簿",
+    "data": "データ",
+    "appInfo": "アプリ情報",
+    "help": "ヘルプ",
+    "contact": "お問い合わせ",
+    "version": "バージョン情報",
+    "clearDialogDesc": "すべての取引、予算、メンバー、壺データが削除されます。この操作は元に戻せません。",
+    "passwordConfirm": "パスワード確認",
+    "clearing": "削除中...",
+    "confirmClearBtn": "全削除",
+    "householdSetup": "設定する",
+    "loginRequired": "要ログイン",
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約"
+  },
+  "legal": {
+    "privacyTitle": "プライバシーポリシー",
+    "termsTitle": "利用規約"
   },
   "members": {
     "title": "家族メンバー",
@@ -309,6 +332,7 @@
   "paywall": {
     "title": "プレミアムにアップグレード",
     "subtitle": "広告なし、スマートな家計管理",
+    "tagline": "広告なし · バックアップ · 3人以上共有",
     "benefit1": "広告なしで使用",
     "benefit2": "3人以上で家計簿を共有",
     "benefit3": "データバックアップ・エクスポート",

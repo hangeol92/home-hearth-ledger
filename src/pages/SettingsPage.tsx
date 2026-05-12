@@ -8,7 +8,7 @@ import { JARS } from '@/types';
 import {
   Download, Trash2, LogOut, AlertTriangle, Eye, EyeOff,
   ChevronRight, Users, Gem, Globe, DollarSign, Home, Star,
-  HelpCircle, Mail, Info,
+  HelpCircle, Mail, Info, Shield, FileText,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
@@ -129,11 +129,11 @@ export default function SettingsPage() {
             </div>
             <h2 className="text-center text-lg font-bold mb-1">{t('settings.clearAll')}</h2>
             <p className="text-center text-sm text-gray-500 mb-5">
-              모든 거래, 예산, 구성원, 항아리 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+              {t('settings.clearDialogDesc')}
             </p>
             {user && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호 확인</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.passwordConfirm')}</label>
                 <div className="relative">
                   <input
                     type={clearPasswordVisible ? 'text' : 'password'}
@@ -155,11 +155,11 @@ export default function SettingsPage() {
             )}
             <div className="flex gap-2">
               <button onClick={() => setShowClearDialog(false)}
-                className="flex-1 h-12 rounded-xl border border-gray-200 text-sm font-medium">취소</button>
+                className="flex-1 h-12 rounded-xl border border-gray-200 text-sm font-medium">{t('actions.cancel')}</button>
               <button onClick={handleClearConfirm}
                 disabled={clearLoading || (!!user && !clearPassword)}
                 className="flex-1 h-12 rounded-xl bg-red-600 text-white text-sm font-semibold disabled:opacity-40">
-                {clearLoading ? '삭제 중...' : '전체 삭제'}
+                {clearLoading ? t('settings.clearing') : t('settings.confirmClearBtn')}
               </button>
             </div>
           </div>
@@ -187,34 +187,34 @@ export default function SettingsPage() {
             <Gem className="h-5 w-5 text-white shrink-0" />
             <div className="flex-1 text-left">
               <p className="text-sm font-semibold text-white">{t('subscription.upgrade')}</p>
-              <p className="text-xs text-gray-400">광고 제거 · 백업 · 3인 이상 공유</p>
+              <p className="text-xs text-gray-400">{t('paywall.tagline')}</p>
             </div>
             <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
           </button>
         )}
       </div>
 
-      {/* 계정 */}
-      <SectionHeader label="계정" />
+      {/* Account */}
+      <SectionHeader label={t('settings.account')} />
       <SectionCard>
         {user ? (
           <div className="flex items-center gap-3 px-4 py-3.5">
             <span className="text-muted-foreground shrink-0"><LogOut className="h-4 w-4" /></span>
             <span className="flex-1 text-sm font-medium text-left truncate text-muted-foreground">{user.email}</span>
             <button onClick={handleSignOut} className="shrink-0 text-xs font-semibold text-destructive px-2 py-1 rounded-lg active:bg-destructive/10">
-              로그아웃
+              {t('settings.logout')}
             </button>
           </div>
         ) : (
           <>
-            <SettingsRow icon={<LogOut className="h-4 w-4" />} label="로그인" onPress={() => navigate('/login')} />
-            <SettingsRow icon={<Users className="h-4 w-4" />} label="회원가입" onPress={() => navigate('/signup')} />
+            <SettingsRow icon={<LogOut className="h-4 w-4" />} label={t('settings.login')} onPress={() => navigate('/login')} />
+            <SettingsRow icon={<Users className="h-4 w-4" />} label={t('settings.signup')} onPress={() => navigate('/signup')} />
           </>
         )}
       </SectionCard>
 
-      {/* 가계부 */}
-      <SectionHeader label="가계부" />
+      {/* Ledger */}
+      <SectionHeader label={t('settings.ledger')} />
       <SectionCard>
         <SettingsRow icon={<Users className="h-4 w-4" />} label={t('members.title')} onPress={() => navigate('/members')} />
         <SettingsRow icon={<Home className="h-4 w-4" />} label={t('settings.fiveJars')} onPress={() => navigate('/settings/jars')} />
@@ -227,32 +227,34 @@ export default function SettingsPage() {
         <SettingsRow icon={<DollarSign className="h-4 w-4" />} label={t('settings.currency')} value={currency} onPress={() => navigate('/settings/currency')} />
       </SectionCard>
 
-      {/* 공유 가계부 */}
-      <SectionHeader label="공유 가계부" />
+      {/* Shared Ledger */}
+      <SectionHeader label={t('settings.sharedLedger')} />
       <SectionCard>
         <SettingsRow
           icon={<Users className="h-4 w-4" />}
           label="Household"
-          value={household?.name ?? (user ? '설정하기' : '로그인 필요')}
+          value={household?.name ?? (user ? t('settings.householdSetup') : t('settings.loginRequired'))}
           onPress={() => navigate('/household/setup')}
         />
       </SectionCard>
 
-      {/* 데이터 */}
-      <SectionHeader label="데이터" />
+      {/* Data */}
+      <SectionHeader label={t('settings.data')} />
       <SectionCard>
         <SettingsRow icon={<Download className="h-4 w-4" />} label={t('settings.exportCsv')} onPress={handleExport} />
         <SettingsRow icon={<Trash2 className="h-4 w-4" />} label={t('settings.clearAll')} onPress={() => { setClearPassword(''); setClearError(''); setShowClearDialog(true); }} danger />
       </SectionCard>
 
-      {/* 앱 정보 */}
-      <SectionHeader label="앱 정보" />
+      {/* App Info */}
+      <SectionHeader label={t('settings.appInfo')} />
       <SectionCard>
-        <SettingsRow icon={<HelpCircle className="h-4 w-4" />} label="도움말" onPress={() => navigate('/settings/help')} />
-        <SettingsRow icon={<Mail className="h-4 w-4" />} label="문의하기" onPress={() => { window.open('mailto:support@fivejars.app?subject=Five Jars 문의', '_blank'); }} />
+        <SettingsRow icon={<HelpCircle className="h-4 w-4" />} label={t('settings.help')} onPress={() => navigate('/settings/help')} />
+        <SettingsRow icon={<Mail className="h-4 w-4" />} label={t('settings.contact')} onPress={() => { window.open('mailto:support@fivejars.app?subject=Five Jars', '_blank'); }} />
+        <SettingsRow icon={<Shield className="h-4 w-4" />} label={t('settings.privacy')} onPress={() => navigate('/settings/privacy')} />
+        <SettingsRow icon={<FileText className="h-4 w-4" />} label={t('settings.terms')} onPress={() => navigate('/settings/terms')} />
         <button className="flex items-center gap-3 w-full px-4 py-3.5 text-sm">
           <Info className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="flex-1 text-left font-medium">버전 정보</span>
+          <span className="flex-1 text-left font-medium">{t('settings.version')}</span>
           <span className="text-muted-foreground text-xs">v{APP_VERSION}</span>
         </button>
       </SectionCard>

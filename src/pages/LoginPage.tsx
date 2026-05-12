@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import LoginScreen from '@/components/auth/LoginScreen';
 import EmailVerifyScreen from '@/components/auth/EmailVerifyScreen';
 
@@ -7,11 +7,14 @@ type AuthState = 'login' | 'verify' | 'success';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect') ?? '/';
+
   const [authState, setAuthState] = useState<AuthState>('login');
   const [verifyEmail, setVerifyEmail] = useState('');
 
   const handleLoginSuccess = () => {
-    navigate('/');
+    navigate(redirect);
   };
 
   const handleSignUp = () => {
@@ -19,7 +22,7 @@ export default function LoginPage() {
   };
 
   const handleVerified = () => {
-    navigate('/');
+    navigate(redirect);
   };
 
   const handleResend = () => {

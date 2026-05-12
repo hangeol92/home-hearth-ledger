@@ -62,7 +62,7 @@ export async function joinByInviteCode(code: string) {
 
 function generateCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const bytes = new Uint8Array(6);
+  const bytes = new Uint8Array(8);
   crypto.getRandomValues(bytes);
   return Array.from(bytes).map(b => chars[b % chars.length]).join('');
 }

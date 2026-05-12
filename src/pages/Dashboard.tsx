@@ -1,36 +1,17 @@
-import { useState } from 'react'; // eslint-disable-line -- period toggle
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { useTransactions, useMembers, useCurrency, useJars, usePeriodBudgets } from '@/hooks/useStore';
 import { JARS, BUDGET_PERIOD_DAYS, getCurrentBudgetPeriod } from '@/types';
-import type { JarId, JarBalance, Transaction, BudgetPeriod } from '@/types';
+import type { JarId, BudgetPeriod } from '@/types';
 import { JarIcon } from '@/components/JarIcon';
 import { useTranslation } from 'react-i18next';
-import { getTxColorClass } from '@/lib/utils';
+import { getTxColorClass, toYearMonth, computePeriodNet } from '@/lib/utils';
 import { useActiveMember } from '@/hooks/useActiveMember';
 import MemberSelectSheet from '@/components/member/MemberSelectSheet';
+import { getDailyQuote } from '@/data/quotes';
 
 type Period = 'month' | 'year';
-
-function computePeriodNet(
-  jarId: JarId,
-  txs: Transaction[],
-  allJars: JarBalance[]
-): number {
-  return txs.reduce((sum, tx) => {
-    if (tx.type === 'income') {
-      const snap = tx.allocationSnapshot;
-      const totalPct =
-        allJars.reduce((s, j) => s + (snap?.[j.id] ?? j.allocationPct), 0) || 100;
-      const jarPct =
-        snap?.[jarId] ?? allJars.find(j => j.id === jarId)?.allocationPct ?? 0;
-      return sum + tx.amount * (jarPct / totalPct);
-    } else if (tx.jar === jarId) {
-      return sum - tx.amount;
-    }
-    return sum;
-  }, 0);
-}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -38,7 +19,9 @@ export default function Dashboard() {
   const { members, getMemberName } = useMembers();
   const { jars } = useJars();
   const { format } = useCurrency();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dailyQuote = useMemo(() => getDailyQuote(), []);
+  const quoteLang = i18n.language.startsWith('ko') ? 'ko' : i18n.language.startsWith('ja') ? 'ja' : 'en';
 
   const [period, setPeriod] = useState<Period>('month');
   const { activeMember, setActiveMember } = useActiveMember();
@@ -48,10 +31,9 @@ export default function Dashboard() {
 
   const now = new Date();
   const yearPrefix = now.getFullYear().toString();
-  const monthPrefix = `${yearPrefix}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const monthPrefix = toYearMonth(now);
   const prefix = period === 'month' ? monthPrefix : yearPrefix;
 
-  // ── 구간 잔여금 계산 ────────────────────────────────────────────────────────
   const currentPeriod: BudgetPeriod = getCurrentBudgetPeriod();
   const { periodBudgets } = usePeriodBudgets(monthPrefix);
   const periodRange = BUDGET_PERIOD_DAYS[currentPeriod];
@@ -80,7 +62,6 @@ export default function Dashboard() {
     : 0;
 
   const periodTxs = transactions.filter(tx => tx.date.startsWith(prefix));
-  // 생활비 카드는 항상 이번 달 기준으로 고정
   const monthTxs = transactions.filter(tx => tx.date.startsWith(monthPrefix));
   const totalBalance = jars.reduce((s, j) => s + j.balance, 0);
   const recentTx = transactions.slice(0, 8);
@@ -94,7 +75,6 @@ export default function Dashboard() {
   const activePct     = activeJarBal?.allocationPct ?? activeJarDef.defaultPct;
   const activeNet     = computePeriodNet(activeJarId, monthTxs, jars);
 
-  // 이번 달 생활비로 배분된 수입
   const incomeAllocatedThisPeriod = monthTxs
     .filter(tx => tx.type === 'income')
     .reduce((sum, tx) => {
@@ -104,7 +84,6 @@ export default function Dashboard() {
       return sum + tx.amount * (jarPct / totalPct);
     }, 0);
 
-  // 이번 달 생활비 지출
   const spentThisPeriod = monthTxs
     .filter(tx => tx.type === 'expense' && tx.jar === activeJarId)
     .reduce((s, tx) => s + tx.amount, 0);
@@ -117,7 +96,7 @@ export default function Dashboard() {
     <div className="min-h-screen pb-safe">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="bg-primary px-5 pb-8" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-start justify-between mb-5">
           {/* Typographic date block */}
           <div>
             <p className="text-[11px] font-medium tracking-[0.2em] text-primary-foreground/60 mb-1 uppercase">
@@ -137,10 +116,31 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+          {/* Members button */}
+          {members.length > 0 && (
+            <button
+              onClick={() => navigate('/members')}
+              className="mt-1 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-primary-foreground border-none cursor-pointer"
+              style={{ background: 'rgba(255,255,255,0.18)' }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              {members.length}
+            </button>
+          )}
         </div>
 
         {/* Balance card */}
-        <div className="rounded-2xl bg-primary-foreground/12 p-4 backdrop-blur">
+        <div
+          className="rounded-2xl p-4"
+          style={{
+            background: 'rgba(255,255,255,0.13)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+          }}
+        >
           <p className="text-primary-foreground/65 text-xs mb-1">
             {t('dashboard.balance')}
           </p>
@@ -148,16 +148,33 @@ export default function Dashboard() {
             {format(totalBalance)}
           </p>
           <div className="flex gap-4 mt-3">
-            <p className="text-xs text-primary-foreground/65">
-              ↑{' '}
-              <span className="text-emerald-300 font-medium">{format(periodIncome)}</span>
-              {' '}{t('dashboard.income')}
+            <div className="flex items-center gap-1.5">
+              <span className="text-emerald-300 font-bold text-sm leading-none">↑</span>
+              <span className="text-xs text-primary-foreground/70">
+                {t('dashboard.income')}{' '}
+                <span className="text-emerald-300 font-semibold">{format(periodIncome)}</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-red-300 font-bold text-sm leading-none">↓</span>
+              <span className="text-xs text-primary-foreground/70">
+                {t('dashboard.expenses')}{' '}
+                <span className="text-red-300 font-semibold">{format(periodExpense)}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 오늘의 명언 ─────────────────────────────────────────────────────── */}
+      <div className="px-4 pt-4">
+        <div className="rounded-2xl bg-card border border-border px-4 py-3 flex gap-3 items-start">
+          <span className="text-2xl leading-none mt-0.5 select-none shrink-0">💬</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-foreground leading-snug">
+              {dailyQuote[quoteLang]}
             </p>
-            <p className="text-xs text-primary-foreground/65">
-              ↓{' '}
-              <span className="text-red-300 font-medium">{format(periodExpense)}</span>
-              {' '}{t('dashboard.expenses')}
-            </p>
+            <p className="text-xs text-muted-foreground mt-1.5">— {dailyQuote.author}</p>
           </div>
         </div>
       </div>
@@ -175,11 +192,9 @@ export default function Dashboard() {
               <p className="text-xs text-muted-foreground">{activePct}% {t('dashboard.allocation')}</p>
             </div>
             <div className="text-right">
-              <p className={`text-lg font-bold ${activeNet >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
-                {activeNet >= 0 ? '+' : ''}{format(activeNet)}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t('dashboard.balance')} {format(activeBalance)}
+              <p className={`text-sm font-bold ${usagePct < 90 ? 'text-emerald-600' : 'text-destructive'}`}>
+                {format(spentThisPeriod)}{' '}
+                <span className="text-[11px] font-medium text-muted-foreground">/ {format(incomeAllocatedThisPeriod)}</span>
               </p>
             </div>
           </div>
@@ -262,9 +277,12 @@ export default function Dashboard() {
           <div className="flex flex-col gap-2">
             {recentTx.map(tx => (
               <div key={tx.id} onClick={() => navigate(`/edit/${tx.id}`)} className="flex items-center gap-3 rounded-xl bg-card p-3 shadow-sm border border-border active:opacity-70 cursor-pointer">
-                <JarIcon jar={tx.jar} size={18} />
+                {tx.type === 'income'
+                  ? <div className="flex shrink-0 items-center justify-center rounded-xl" style={{ width: 34, height: 34, background: '#f4f4f5' }}><span style={{ fontSize: 18 }}>💼</span></div>
+                  : <JarIcon jar={tx.jar} size={18} />
+                }
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">
+                  <p className="font-semibold text-sm">
                     {tx.type === 'income'
                       ? String(t(`incomeCat.${tx.subCategory}`, { defaultValue: tx.subCategory }))
                       : `${t(`jars.${tx.jar}`)} · ${String(t(`sub.${tx.subCategory}`, { defaultValue: tx.subCategory }))}`}

@@ -41,7 +41,11 @@ create policy "users insert own profile"
 
 create policy "users update own profile"
   on profiles for update
-  using (id = auth.uid());
+  using (id = auth.uid())
+  with check (
+    id = auth.uid()
+    and is_admin = (select is_admin from profiles where id = auth.uid())
+  );
 
 -- Members: scoped to household
 create policy "household members read members"
@@ -82,3 +86,12 @@ create policy "household members write jars"
   on jars for all
   using (household_id = current_household_id())
   with check (household_id = current_household_id());
+
+-- Subscriptions: users read own row only; writes done via service-role Edge Function
+alter table subscriptions enable row level security;
+
+create policy "users read own subscription"
+  on subscriptions for select
+  using (user_id = auth.uid());
+
+-- No INSERT/UPDATE/DELETE from client — only the Edge Function (service role) can write

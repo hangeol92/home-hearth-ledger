@@ -74,11 +74,17 @@ export async function updateTransaction(tx: Transaction): Promise<void> {
   const { error } = await supabase
     .from('transactions')
     .update(toRow(tx, householdId))
-    .eq('id', tx.id);
+    .eq('id', tx.id)
+    .eq('household_id', householdId);
   if (error) throw error;
 }
 
 export async function deleteTransaction(id: string): Promise<void> {
-  const { error } = await supabase.from('transactions').delete().eq('id', id);
+  const householdId = await getHouseholdId();
+  const { error } = await supabase
+    .from('transactions')
+    .delete()
+    .eq('id', id)
+    .eq('household_id', householdId);
   if (error) throw error;
 }

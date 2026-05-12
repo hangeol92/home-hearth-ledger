@@ -24,12 +24,17 @@ import HelpPage from "@/pages/settings/HelpPage";
 import UtilityBillsPage from "@/pages/settings/UtilityBillsPage";
 import LanguagePage from "@/pages/settings/LanguagePage";
 import CurrencyPage from "@/pages/settings/CurrencyPage";
+import PrivacyPage from "@/pages/settings/PrivacyPage";
+import TermsPage from "@/pages/settings/TermsPage";
 import { SubscriptionProvider } from "@/components/SubscriptionProvider";
 import { useSubscription } from "@/hooks/useSubscription";
 import PaywallSheet from "@/components/paywall/PaywallSheet";
 import LoginPage from "@/pages/LoginPage";
 import SignUpPage from "@/pages/SignUpPage";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { initPurchases } from "@/lib/purchases";
+import { initSentry } from "@/lib/sentry";
+import AdminPage from "@/pages/AdminPage";
 
 const queryClient = new QueryClient();
 
@@ -50,7 +55,11 @@ function PaywallBridge() {
 }
 
 const App = () => {
-  useEffect(() => { initStatusBar(); }, []);
+  useEffect(() => {
+    initSentry();
+    initStatusBar();
+    initPurchases();
+  }, []);
   return (
   <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
@@ -82,6 +91,9 @@ const App = () => {
           <Route path="/settings/language" element={<LanguagePage />} />
           <Route path="/settings/currency" element={<CurrencyPage />} />
           <Route path="/settings/help" element={<HelpPage />} />
+          <Route path="/settings/privacy" element={<PrivacyPage />} />
+          <Route path="/settings/terms" element={<TermsPage />} />
+          <Route path="/admin" element={<AdminPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <BottomNav />

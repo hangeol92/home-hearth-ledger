@@ -1,7 +1,39 @@
 # Home Hearth Ledger — CLAUDE.md
 
+## 작업 원칙
+
+> 참고: [Karpathy CLAUDE.md](https://github.com/forrestchang/andrej-karpathy-skills/blob/main/CLAUDE.md) 기반. 간단한 작업은 판단하여 적용.
+
+### 1. 먼저 생각하고 코딩한다
+- 가정이 있으면 명시적으로 밝힌다. 불확실하면 묻는다.
+- 해석이 여러 가지면 제시하고 선택을 기다린다. 혼자 결정하지 않는다.
+- 더 단순한 접근이 있으면 먼저 말한다.
+- 무언가 불명확하면 멈추고 이름을 붙여 질문한다.
+
+### 2. 단순함 우선
+- 요청된 것만 구현한다. 추측으로 기능을 추가하지 않는다.
+- 단일 사용 코드에 추상화를 만들지 않는다.
+- 불가능한 시나리오에 대한 에러 핸들링을 추가하지 않는다.
+- 200줄로 쓴 코드가 50줄로 가능하다면 다시 쓴다.
+
+### 3. 외과적 수정
+- 요청받은 것만 건드린다. 인접 코드를 '개선'하지 않는다.
+- 기존 스타일을 따른다. 내 방식대로 바꾸지 않는다.
+- 내 변경이 만든 미사용 import/변수/함수는 제거한다.
+- 기존에 있던 dead code는 언급만 하고 삭제하지 않는다.
+
+### 4. 목표 중심 실행
+- 작업을 검증 가능한 목표로 변환한다.
+- 여러 단계 작업은 계획을 먼저 제시한다:
+  ```
+  1. [단계] → 검증: [확인 방법]
+  2. [단계] → 검증: [확인 방법]
+  ```
+
+---
+
 ## 프로젝트 개요
-가족 가계부 앱. React + TypeScript + Vite + Capacitor (iOS/Android).  
+가족 가계부 앱. React + TypeScript + Vite + Capacitor (iOS/Android).
 비회원(IndexedDB)과 회원(Supabase) 모두 지원. 모바일 375px 기준, iOS 스타일 UI.
 
 ## 커맨드
@@ -20,6 +52,7 @@ npx cap sync ios     # 빌드 후 iOS 동기화
 - Supabase — 회원 클라우드 저장 및 실시간 동기화
 - Capacitor 7.x (iOS/Android 빌드)
 - i18next — 한국어/영어/일본어 (`src/i18n/locales/`)
+- RevenueCat (`@revenuecat/purchases-capacitor`) — iOS 인앱 구독
 
 ---
 
@@ -95,20 +128,40 @@ npx cap sync ios     # 빌드 후 iOS 동기화
 - 가입 시 닉네임, 생년월일, 국가 추가 입력 필요
 
 ## Supabase 스키마
-- `profiles`: 사용자 계정 (닉네임, 생년월일, 국가)
+- `profiles`: 사용자 계정 (닉네임, 생년월일, 국가, household_id)
 - `households`: 가구 단위 (6자리 초대 코드로 멤버 초대)
 - `members`: 가족 구성원
 - `transactions`: 수입/지출 내역
-- `settings`: 사용자별 앱 설정
+- `jars`: 壺별 잔액 및 배분 비율
+- `budgets`: 월별 예산
+- `subscriptions`: 구독 상태 (RevenueCat webhook이 upsert, 클라이언트는 SELECT만)
+
+### RLS 원칙
+- 모든 테이블 RLS 활성화
+- `transactions`, `jars`, `budgets`, `members` — `household_id = current_household_id()`로 격리
+- `subscriptions` — 클라이언트 write 금지, Supabase Edge Function(service role)만 write 가능
+- `deleteTransaction`, `updateTransaction` 호출 시 반드시 `household_id` 필터 포함 (RLS에만 의존 금지)
 
 ---
 
-## 주요 컴포넌트
+## 구독 시스템 (RevenueCat)
+
+- `src/lib/purchases.ts` — RevenueCat 추상화 레이어. 모든 함수는 `!isNative`면 no-op
+- `src/components/SubscriptionProvider.tsx` — 구독 상태 Context. Native는 RC, Web은 Supabase fallback
+- `src/components/paywall/PaywallSheet.tsx` — 구독 시트. `current.annual` / `current.monthly` 패키지 사용
+- `supabase/functions/revenuecat-webhook/` — RC 이벤트 수신 → `subscriptions` 테이블 upsert
+- Entitlement ID: `premium` (RC 대시보드와 코드 일치 필수)
+- 환경변수: `VITE_REVENUECAT_IOS_KEY` (프로덕션은 `appl_`로 시작하는 키 사용)
+
+---
+
+## 주요 컴포넌트 및 데이터
 - `src/components/ErrorBoundary.tsx` — 앱 전체를 감싸 흰 화면 방지
 - `src/components/SubscriptionProvider.tsx` — 구독 상태 Context 제공
 - `src/components/ads/AdBanner.tsx` — 광고 배너. CSS 변수 `--ad-banner-height` 설정
 - `src/components/paywall/PaywallSheet.tsx` — 프리미엄 업그레이드 시트
 - `src/components/JarIcon.tsx` — `getJarDef(id)` 반드시 `?? JARS[0]` fallback 유지
+- `src/data/quotes.ts` — 오늘의 명언 (60개 × ko/en/ja). `getDailyQuote()`로 일차 기반 선택
 
 ## Safe Area (iOS)
 - 기본 패딩: `src/index.css`의 `.pt-safe` = `env(safe-area-inset-top, 0px)` (헤더 없는 페이지용)

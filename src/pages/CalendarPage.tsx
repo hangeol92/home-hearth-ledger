@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useCalendar } from '@/hooks/useCalendar';
-import { useJars, useCurrency, useMembers } from '@/hooks/useStore';
+import { useCurrency, useMembers } from '@/hooks/useStore';
 import { JarIcon } from '@/components/JarIcon';
-import { ChevronLeft, ChevronRight, ChevronDown, Plus, Search, SlidersHorizontal, BarChart2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useActiveMember } from '@/hooks/useActiveMember';
@@ -25,7 +25,6 @@ export default function CalendarPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { format } = useCurrency();
-  const { jars } = useJars();
   const { members } = useMembers();
   const { activeMember, setActiveMember } = useActiveMember();
   const [showMonthPicker, setShowMonthPicker] = useState(false);
@@ -46,14 +45,12 @@ export default function CalendarPage() {
   }, [scanStatus, scanError]);
   const {
     year, month, selectedDate,
-    totalIncome, totalExpense,
-    expenseByDate, selectedTxs,
+    byDate, expenseByDate, selectedTxs,
     prevMonth, nextMonth, selectDate, goToMonth,
     firstDayOfWeek, daysInMonth,
   } = useCalendar();
 
   const today = new Date().toISOString().split('T')[0];
-  const totalBalance = jars.reduce((s, j) => s + j.balance, 0);
   const weekdays = getWeekdays(i18n.language);
 
   const cells: (number | null)[] = [
@@ -120,18 +117,27 @@ export default function CalendarPage() {
         );
       })()}
       {/* 헤더 */}
-      <div className="flex items-center justify-between px-4 py-3 min-h-[44px]">
-        <button
-          className="flex items-center gap-1 text-lg font-bold active:opacity-70"
-          onClick={() => { setPickerYear(year); setShowMonthPicker(true); }}
-        >
-          {monthLabel}
-          <ChevronDown className="h-4 w-4 text-gray-400" />
-        </button>
-        <div className="flex items-center gap-3 text-gray-400 min-h-[44px]">
-          <button className="flex items-center justify-center"><Search className="h-5 w-5" /></button>
-          <button className="flex items-center justify-center"><SlidersHorizontal className="h-5 w-5" /></button>
-          <button className="flex items-center justify-center"><BarChart2 className="h-5 w-5" /></button>
+      <div className="flex items-center justify-between px-4 py-4">
+        <h1 className="text-2xl font-bold tracking-tight">{t('nav.calendar')}</h1>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={prevMonth}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary active:bg-secondary/80"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => { setPickerYear(year); setShowMonthPicker(true); }}
+            className="min-w-[80px] text-center text-sm font-semibold active:opacity-70"
+          >
+            {monthLabel}
+          </button>
+          <button
+            onClick={nextMonth}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary active:bg-secondary/80"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
           <button
             onClick={() => {
               if (activeMember || members.length === 0) {
@@ -141,71 +147,66 @@ export default function CalendarPage() {
                 setShowMemberSheet(true);
               }
             }}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900"
+            className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-gray-900"
           >
             <Plus className="h-4 w-4 text-white" />
           </button>
         </div>
       </div>
 
-      {/* 요약 카드 */}
-      <div className="mx-4 mb-4 rounded-2xl bg-gray-50 px-5 py-4">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <p className="text-[11px] text-gray-400 mb-0.5">{t('calendar.income')}</p>
-            <p className="text-base font-bold text-emerald-600">{format(totalIncome)}</p>
-          </div>
-          <div className="border-l border-gray-200">
-            <p className="text-[11px] text-gray-400 mb-0.5">{t('calendar.expense')}</p>
-            <p className="text-base font-bold text-red-500">{format(totalExpense)}</p>
-          </div>
-          <div className="border-l border-gray-200">
-            <p className="text-[11px] text-gray-400 mb-0.5">{t('calendar.balance')}</p>
-            <p className="text-base font-bold">{format(totalBalance)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 월 이동 */}
-      <div className="flex items-center justify-between px-4 mb-1">
-        <button onClick={prevMonth}><ChevronLeft className="h-5 w-5 text-gray-400" /></button>
-        <button onClick={nextMonth}><ChevronRight className="h-5 w-5 text-gray-400" /></button>
-      </div>
-
       {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 px-2">
+      <div className="grid grid-cols-7 px-2 mb-1">
         {weekdays.map((d, i) => (
-          <div key={d} className={`py-1 text-center text-[11px] font-medium ${i === 0 ? 'text-red-400' : 'text-gray-500'}`}>{d}</div>
+          <div key={d} className={`py-1 text-center text-[11px] font-semibold ${i === 0 ? 'text-red-400' : i === 6 ? 'text-primary' : 'text-muted-foreground'}`}>{d}</div>
         ))}
       </div>
 
       {/* 달력 그리드 */}
-      <div className="grid grid-cols-7 px-2">
+      <div className="grid grid-cols-7 px-2" style={{ gap: '2px 0' }}>
         {cells.map((day, idx) => {
-          if (day === null) return <div key={`empty-${idx}`} className="min-h-[44px]" />;
+          if (day === null) return <div key={`empty-${idx}`} />;
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           const isToday = dateStr === today;
           const isSelected = dateStr === selectedDate;
-          const expense = expenseByDate.get(dateStr) ?? 0;
-          const isSunday = (firstDayOfWeek + day - 1) % 7 === 0;
+          const hasTx = (byDate.get(dateStr)?.length ?? 0) > 0;
+          const colIdx = (firstDayOfWeek + day - 1) % 7;
+          const isSunday = colIdx === 0;
+          const isSaturday = colIdx === 6;
+
+          const textColor = isSelected
+            ? '#fff'
+            : isSunday
+              ? '#ef4444'
+              : isSaturday
+                ? 'var(--primary)'
+                : 'var(--foreground)';
+
+          const bgColor = isSelected
+            ? '#111827'
+            : isToday
+              ? 'var(--primary-light, #eff4ff)'
+              : 'transparent';
 
           return (
             <button
               key={dateStr}
               onClick={() => selectDate(dateStr)}
-              className="flex flex-col items-center py-1 min-h-[44px] justify-start"
+              className="flex flex-col items-center py-1.5 justify-start border-none bg-transparent cursor-pointer"
             >
-              <span className={`flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-medium
-                ${isToday ? 'bg-gray-900 text-white' :
-                  isSelected ? 'bg-blue-50 text-blue-600' : ''}
-                ${isSunday && !isToday && !isSelected ? 'text-red-400' : ''}
-              `}>
+              <div
+                className="flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-medium"
+                style={{ background: bgColor, color: textColor, fontWeight: isSelected || isToday ? 700 : 400 }}
+              >
                 {day}
-              </span>
-              {expense > 0 && (
-                <span className="text-[9px] text-red-500 leading-none mt-0.5 truncate w-full text-center">
-                  -{format(expense)}
-                </span>
+              </div>
+              {hasTx && (
+                <div
+                  className="rounded-full mt-0.5"
+                  style={{
+                    width: 4, height: 4,
+                    background: isSelected ? '#fff' : 'var(--primary)',
+                  }}
+                />
               )}
             </button>
           );
@@ -224,9 +225,16 @@ export default function CalendarPage() {
             <div className="space-y-2">
               {selectedTxs.map(tx => (
                 <div key={tx.id} className="flex items-center gap-3 rounded-xl bg-white border border-gray-100 shadow-sm p-3">
-                  <JarIcon jar={tx.jar} size={20} />
+                  {tx.type === 'income'
+                    ? <div className="flex shrink-0 items-center justify-center rounded-xl" style={{ width: 36, height: 36, background: '#f4f4f5' }}><span style={{ fontSize: 18 }}>💼</span></div>
+                    : <JarIcon jar={tx.jar} size={20} />
+                  }
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{String(t(`sub.${tx.subCategory}`, { defaultValue: tx.subCategory }))}</p>
+                    <p className="text-sm font-semibold truncate">
+                      {tx.type === 'income'
+                        ? String(t(`incomeCat.${tx.subCategory}`, { defaultValue: tx.subCategory }))
+                        : String(t(`sub.${tx.subCategory}`, { defaultValue: tx.subCategory }))}
+                    </p>
                     {tx.note && <p className="text-xs text-gray-400 truncate">{tx.note}</p>}
                   </div>
                   <p className={`text-sm font-bold ${tx.type === 'income' ? 'text-emerald-600' : 'text-red-500'}`}>

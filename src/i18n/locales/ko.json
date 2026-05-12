@@ -79,7 +79,30 @@
     "totalPct": "합계",
     "resetBalances": "항아리 잔액 초기화",
     "confirmReset": "모든 항아리 잔액을 0으로 초기화할까요?",
-    "invalidTotal": "배분 합계는 100%여야 합니다"
+    "invalidTotal": "배분 합계는 100%여야 합니다",
+    "account": "계정",
+    "login": "로그인",
+    "signup": "회원가입",
+    "logout": "로그아웃",
+    "ledger": "가계부",
+    "sharedLedger": "공유 가계부",
+    "data": "데이터",
+    "appInfo": "앱 정보",
+    "help": "도움말",
+    "contact": "문의하기",
+    "version": "버전 정보",
+    "clearDialogDesc": "모든 거래, 예산, 구성원, 항아리 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+    "passwordConfirm": "비밀번호 확인",
+    "clearing": "삭제 중...",
+    "confirmClearBtn": "전체 삭제",
+    "householdSetup": "설정하기",
+    "loginRequired": "로그인 필요",
+    "privacy": "개인정보처리방침",
+    "terms": "이용약관"
+  },
+  "legal": {
+    "privacyTitle": "개인정보처리방침",
+    "termsTitle": "이용약관"
   },
   "members": {
     "title": "가족 구성원",
@@ -309,6 +332,7 @@
   "paywall": {
     "title": "프리미엄으로 업그레이드",
     "subtitle": "광고 없이, 더 스마트하게 관리하세요",
+    "tagline": "광고 제거 · 백업 · 3인 이상 공유",
     "benefit1": "광고 없이 사용",
     "benefit2": "3인 이상 가계부 공유",
     "benefit3": "데이터 백업 및 내보내기",
