@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { MEMBER_ROLES, MEMBER_COLORS, MEMBER_EMOJI_OPTIONS, type MemberRole } from '@/types';
 import type { FamilyMember } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { MemberIcon } from '@/components/icons/MemberIcons';
 
 export default function MemberManageSheet({
   members, onClose, onSave, onRemove,
@@ -114,8 +115,9 @@ export default function MemberManageSheet({
                     const taken = registeredRoles.has(def.id);
                     return (
                       <button key={def.id} onClick={() => !taken && selectRole(def.id)} disabled={taken}
-                        className={`flex flex-col items-center gap-1 rounded-2xl p-3 bg-gray-50 transition-all ${taken ? 'opacity-30' : 'active:scale-95'}`}>
-                        <span className="text-2xl">{def.emoji}</span>
+                        className={`flex flex-col items-center gap-1 rounded-2xl p-3 bg-gray-50 transition-all ${taken ? 'opacity-30' : 'active:scale-95'}`}
+                        style={{ color: def.color }}>
+                        <MemberIcon role={def.id} size={28} strokeWidth={1.3} />
                         <span className="text-[11px] font-medium text-gray-700 text-center">{t(def.labelKey)}</span>
                       </button>
                     );

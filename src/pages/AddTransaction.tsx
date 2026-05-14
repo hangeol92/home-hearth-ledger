@@ -28,6 +28,8 @@ import { JarIcon, getJarColor } from '@/components/JarIcon';
 import { useTranslation } from 'react-i18next';
 import { useActiveMember } from '@/hooks/useActiveMember';
 import MemberManageSheet from '@/components/member/MemberManageSheet';
+import { CategoryIcon } from '@/components/icons/CategoryIcons';
+import { MemberIcon } from '@/components/icons/MemberIcons';
 
 export default function AddTransaction() {
   const navigate = useNavigate();
@@ -252,9 +254,9 @@ export default function AddTransaction() {
                           setAddingSubCat(false);
                         }}
                           className="flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-all active:scale-95"
-                          style={{ backgroundColor: active ? '#10B98125' : 'hsl(var(--secondary))', outline: active ? '2px solid #10B981' : 'none' }}>
-                          <span className="text-xl leading-none">{LIVING_MAIN_CATEGORY_ICONS[cat]}</span>
-                          <span className="text-[10px] font-medium text-center leading-tight w-full truncate px-0.5" style={{ color: active ? '#10B981' : undefined }}>
+                          style={{ backgroundColor: active ? '#10B98125' : 'hsl(var(--secondary))', outline: active ? '2px solid #10B981' : 'none', color: active ? '#10B981' : undefined }}>
+                          <CategoryIcon category={cat} size={22} strokeWidth={active ? 1.8 : 1.3} />
+                          <span className="text-[10px] font-medium text-center leading-tight w-full truncate px-0.5">
                             {t(`mainCat.${cat}`, { defaultValue: cat })}
                           </span>
                         </button>
@@ -443,7 +445,6 @@ export default function AddTransaction() {
                 const registered = memberByRole.get(def.id);
                 if (!registered) return null;
                 const active = memberId === registered.id;
-                const displayEmoji = registered.emoji ?? def.emoji;
                 return (
                   <button key={def.id}
                     onClick={() => handleRoleTap(def.id)}
@@ -454,8 +455,11 @@ export default function AddTransaction() {
                       minWidth: 64,
                     }}>
                     <div className="flex items-center justify-center rounded-xl"
-                      style={{ backgroundColor: `${def.color}20`, width: 32, height: 32 }}>
-                      <span style={{ fontSize: 16 }}>{displayEmoji}</span>
+                      style={{ backgroundColor: `${def.color}20`, width: 32, height: 32, color: def.color }}>
+                      {registered.emoji
+                        ? <span style={{ fontSize: 16 }}>{registered.emoji}</span>
+                        : <MemberIcon role={def.id} size={18} strokeWidth={1.3} />
+                      }
                     </div>
                     <span className="text-[10px] font-medium leading-tight text-center w-full truncate">
                       {registered.name}
