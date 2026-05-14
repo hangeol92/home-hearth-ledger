@@ -8,14 +8,12 @@ import BottomNav from "@/components/BottomNav";
 import SyncStatus from "@/components/SyncStatus";
 import Dashboard from "@/pages/Dashboard";
 import History from "@/pages/History";
-import Charts from "@/pages/Charts";
 import SettingsPage from "@/pages/SettingsPage";
 import AddTransaction from "@/pages/AddTransaction";
 import Members from "@/pages/Members";
 import NotFound from "@/pages/NotFound";
 import HouseholdSetup from "@/pages/HouseholdSetup";
 import CalendarPage from "@/pages/CalendarPage";
-import NotificationsPage from "@/pages/NotificationsPage";
 import JarsPage from "@/pages/JarsPage";
 import SpecialExpensesPage from "@/pages/SpecialExpensesPage";
 import BudgetPage from "@/pages/BudgetPage";
@@ -76,9 +74,7 @@ const App = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/history" element={<History />} />
           <Route path="/calendar" element={<CalendarPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/jars" element={<JarsPage />} />
-          <Route path="/charts" element={<Charts />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/add" element={<AddTransaction />} />
           <Route path="/edit/:id" element={<AddTransaction />} />
