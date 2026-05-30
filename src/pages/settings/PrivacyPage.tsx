@@ -21,7 +21,7 @@ const CONTENT: Record<Lang, PrivacyContent> = {
       {
         title: '1. 개인정보처리자',
         items: [
-          'Five Jars(이하 "앱")는 개인 개발자가 운영하는 가계부 서비스입니다.',
+          'Five Onggis(이하 "앱")는 개인 개발자가 운영하는 가계부 서비스입니다.',
           '문의: support@fivejars.app',
         ],
       },
@@ -108,7 +108,7 @@ const CONTENT: Record<Lang, PrivacyContent> = {
       {
         title: '1. Data Controller',
         items: [
-          'Five Jars ("the App") is a personal finance service operated by an independent developer.',
+          'Five Onggis ("the App") is a personal finance service operated by an independent developer.',
           'Contact: support@fivejars.app',
         ],
       },
@@ -195,7 +195,7 @@ const CONTENT: Record<Lang, PrivacyContent> = {
       {
         title: '1. 個人情報取扱事業者',
         items: [
-          'Five Jars（以下「本アプリ」）は、個人開発者が運営する家計簿サービスです。',
+          'Five Onggis（以下「本アプリ」）は、個人開発者が運営する家計簿サービスです。',
           'お問い合わせ: support@fivejars.app',
         ],
       },

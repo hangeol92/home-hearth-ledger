@@ -23,7 +23,7 @@ const CONTENT: Record<Lang, TermsContent> = {
       {
         title: '제1조 목적',
         items: [
-          '이 약관은 Five Jars(이하 "앱")가 제공하는 가계부 서비스의 이용 조건 및 절차, 이용자와 앱 간의 권리·의무를 규정합니다.',
+          '이 약관은 Five Onggis(이하 "앱")가 제공하는 가계부 서비스의 이용 조건 및 절차, 이용자와 앱 간의 권리·의무를 규정합니다.',
         ],
       },
       {
@@ -39,7 +39,7 @@ const CONTENT: Record<Lang, TermsContent> = {
           '앱은 다음 서비스를 제공합니다.',
           '· 개인 및 가족 가계부 기록·관리',
           '· 가족 공유 가계부 (초대 코드를 통한 가구 공유)',
-          '· 다섯 항아리(Five Jars) 방식의 수입 자동 배분',
+          '· 다섯 항아리(Five Onggis) 방식의 수입 자동 배분',
           '· 유료 구독: 클라우드 동기화, CSV 내보내기 등 프리미엄 기능',
           '비회원(게스트)은 기기 내 저장 방식으로 서비스를 이용할 수 있으나, 클라우드 동기화 및 공유 기능은 회원 전용입니다.',
         ],
@@ -104,7 +104,7 @@ const CONTENT: Record<Lang, TermsContent> = {
       {
         title: 'Article 1 — Purpose',
         items: [
-          'These Terms govern the conditions of use and the rights and obligations between Five Jars ("the App") and its users.',
+          'These Terms govern the conditions of use and the rights and obligations between Five Onggis ("the App") and its users.',
         ],
       },
       {
@@ -120,7 +120,7 @@ const CONTENT: Record<Lang, TermsContent> = {
           'The App provides the following services:',
           '· Personal and family expense tracking',
           '· Shared household ledger (via invite code)',
-          '· Automatic income allocation using the Five Jars method',
+          '· Automatic income allocation using the Five Onggis method',
           '· Premium subscription: cloud sync, CSV export, and more',
           'Guest users may use the App with on-device storage. Cloud sync and sharing require an account.',
         ],
@@ -185,7 +185,7 @@ const CONTENT: Record<Lang, TermsContent> = {
       {
         title: '第1条 目的',
         items: [
-          'この利用規約は、Five Jars（以下「本アプリ」）が提供する家計簿サービスの利用条件および手続き、ユーザーと本アプリ間の権利・義務を定めるものです。',
+          'この利用規約は、Five Onggis（以下「本アプリ」）が提供する家計簿サービスの利用条件および手続き、ユーザーと本アプリ間の権利・義務を定めるものです。',
         ],
       },
       {
@@ -201,7 +201,7 @@ const CONTENT: Record<Lang, TermsContent> = {
           '本アプリは以下のサービスを提供します。',
           '· 個人・家族の家計管理',
           '· 家族共有家計簿（招待コードによる世帯共有）',
-          '· Five Jars方式による収入の自動振り分け',
+          '· Five Onggis方式による収入の自動振り分け',
           '· プレミアムサブスクリプション：クラウド同期、CSVエクスポートなど',
           'ゲストユーザーは端末内保存でご利用いただけますが、クラウド同期・共有機能はアカウント登録が必要です。',
         ],

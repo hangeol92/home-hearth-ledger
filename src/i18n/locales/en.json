@@ -1,5 +1,5 @@
 {
-  "app": { "title": "Five Jars" },
+  "app": { "title": "Five Onggis" },
   "nav": {
     "home": "Home",
     "history": "History",
@@ -74,7 +74,7 @@
     "clearAll": "Clear all data",
     "noData": "No data to export",
     "confirmClear": "Are you sure? This will delete all data.",
-    "fiveJars": "Five Jars Allocation",
+    "fiveJars": "Five Onggis Allocation",
     "fiveJarsHint": "Income auto-splits across jars by these percentages. Must total 100%.",
     "totalPct": "Total",
     "resetBalances": "Reset jar balances",

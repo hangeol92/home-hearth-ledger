@@ -249,7 +249,7 @@ export default function SettingsPage() {
       <SectionHeader label={t('settings.appInfo')} />
       <SectionCard>
         <SettingsRow icon={<HelpCircle className="h-4 w-4" />} label={t('settings.help')} onPress={() => navigate('/settings/help')} />
-        <SettingsRow icon={<Mail className="h-4 w-4" />} label={t('settings.contact')} onPress={() => { window.open('mailto:support@fivejars.app?subject=Five Jars', '_blank'); }} />
+        <SettingsRow icon={<Mail className="h-4 w-4" />} label={t('settings.contact')} onPress={() => { window.open('mailto:support@fivejars.app?subject=Five Onggis', '_blank'); }} />
         <SettingsRow icon={<Shield className="h-4 w-4" />} label={t('settings.privacy')} onPress={() => navigate('/settings/privacy')} />
         <SettingsRow icon={<FileText className="h-4 w-4" />} label={t('settings.terms')} onPress={() => navigate('/settings/terms')} />
         <button className="flex items-center gap-3 w-full px-4 py-3.5 text-sm">

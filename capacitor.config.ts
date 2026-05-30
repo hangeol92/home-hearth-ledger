@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.homehearth.ledger',
-  appName: 'Five Jars',
+  appName: 'Five Onggis',
   webDir: 'dist',
 
   ios: {

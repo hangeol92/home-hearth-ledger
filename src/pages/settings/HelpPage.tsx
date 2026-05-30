@@ -49,7 +49,7 @@ export default function HelpPage() {
           <p className="text-sm text-muted-foreground">
             해결되지 않은 문제가 있으시면{' '}
             <button
-              onClick={() => window.open('mailto:support@fivejars.app?subject=Five Jars 문의', '_blank')}
+              onClick={() => window.open('mailto:support@fivejars.app?subject=Five Onggis 문의', '_blank')}
               className="text-primary font-medium underline underline-offset-2"
             >
               support@fivejars.app
