@@ -29,21 +29,19 @@ export default function MemberManageSheet({
   const registeredRoles = new Set(members.map(m => m.role).filter(Boolean));
 
   const startEdit = (m: FamilyMember) => {
-    const def = m.role ? MEMBER_ROLES.find(r => r.id === m.role) : null;
     setEditingId(m.id);
     setEditName(m.name);
-    setEditEmoji(m.emoji ?? def?.emoji ?? '');
+    setEditEmoji(m.emoji ?? '');
     setEditColor(m.color);
   };
 
   const saveEdit = async () => {
     const m = members.find(m => m.id === editingId);
     if (!m || !editName.trim()) return;
-    const def = m.role ? MEMBER_ROLES.find(r => r.id === m.role) : null;
     await onSave({
       ...m,
       name: editName.trim(),
-      emoji: editEmoji && editEmoji !== (def?.emoji ?? '') ? editEmoji : undefined,
+      emoji: editEmoji || undefined,
       color: editColor,
     });
     setEditingId(null);
@@ -57,7 +55,7 @@ export default function MemberManageSheet({
     if (roleId !== 'custom') {
       const def = MEMBER_ROLES.find(r => r.id === roleId)!;
       setNewName(t(def.labelKey));
-      setNewEmoji(def.emoji);
+      setNewEmoji('');
       setNewColor(def.color);
     } else {
       setNewName('');
@@ -77,7 +75,7 @@ export default function MemberManageSheet({
       name: newName.trim(),
       color: isRole ? (def?.color ?? newColor) : newColor,
       role: isRole ? (pendingRole as MemberRole) : undefined,
-      emoji: newEmoji && newEmoji !== (def?.emoji ?? '') ? newEmoji : undefined,
+      emoji: newEmoji || undefined,
     });
     setAddStep('idle');
     setNewName('');
@@ -106,7 +104,7 @@ export default function MemberManageSheet({
         </div>
 
         {addStep !== 'idle' ? (
-          <div className="px-5 pb-8 overflow-y-auto">
+          <div className="flex-1 min-h-0 px-5 pb-8 overflow-y-auto">
             {addStep === 'role' ? (
               <>
                 <p className="text-sm text-gray-500 mb-3">{t('members.roleSection')}</p>
@@ -175,7 +173,7 @@ export default function MemberManageSheet({
             )}
           </div>
         ) : (
-          <div className="overflow-y-auto px-5 pb-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-6">
             <div className="space-y-1 mb-4">
               {members.map(m => {
                 const emoji = getDisplayEmoji(m);
