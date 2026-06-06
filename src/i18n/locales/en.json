@@ -98,7 +98,8 @@
     "householdSetup": "Set Up",
     "loginRequired": "Login required",
     "privacy": "Privacy Policy",
-    "terms": "Terms of Service"
+    "terms": "Terms of Service",
+    "periodGoal": "Period Goals"
   },
   "legal": {
     "privacyTitle": "Privacy Policy",
@@ -153,7 +154,17 @@
     "late": "Late",
     "dayUnit": "",
     "setBudget": "Set target",
-    "usagePct": "{{pct}}% used"
+    "usagePct": "{{pct}}% used",
+    "current": "Now"
+  },
+  "periodGoal": {
+    "title": "Period Goal Settings",
+    "enable": "Use Period Goals",
+    "enableHint": "Manage living expenses with per-period spending targets",
+    "pctHint": "Share of monthly living budget per period (total must be 100%)",
+    "totalError": "Percentages must total 100%",
+    "sectionTitle": "Period Goals",
+    "noIncome": "No income"
   },
   "incomeCat": {
     "Salary": "Salary",

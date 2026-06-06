@@ -48,21 +48,23 @@ export function useTransactions() {
   };
 
   const add = async (tx: Transaction) => {
+    const today = new Date().toISOString().split('T')[0];
     if (tx.type === 'income') {
       const jars = await storageRef.current.getAllJars();
       const txWithSnap: Transaction = { ...tx, allocationSnapshot: snapshotAllocations(jars) };
       await storageRef.current.addTransaction(txWithSnap);
-      await applyIncomeSplit(txWithSnap, 1);
+      if (tx.date <= today) await applyIncomeSplit(txWithSnap, 1);
     } else {
       await storageRef.current.addTransaction(tx);
-      await storageRef.current.adjustJarBalance(tx.jar, -tx.amount);
+      if (tx.date <= today) await storageRef.current.adjustJarBalance(tx.jar, -tx.amount);
     }
     await refresh();
   };
 
   const remove = async (id: string) => {
+    const today = new Date().toISOString().split('T')[0];
     const tx = await storageRef.current.getTransactionById(id);
-    if (tx) {
+    if (tx && tx.date <= today) {
       if (tx.type === 'income') {
         await applyIncomeSplit(tx, -1);
       } else {
@@ -74,22 +76,25 @@ export function useTransactions() {
   };
 
   const update = async (updated: Transaction) => {
+    const today = new Date().toISOString().split('T')[0];
     const old = await storageRef.current.getTransactionById(updated.id);
     if (!old) return;
 
-    if (old.type === 'income') {
-      await applyIncomeSplit(old, -1);
-    } else {
-      await storageRef.current.adjustJarBalance(old.jar, old.amount);
+    if (old.date <= today) {
+      if (old.type === 'income') {
+        await applyIncomeSplit(old, -1);
+      } else {
+        await storageRef.current.adjustJarBalance(old.jar, old.amount);
+      }
     }
 
     let toSave: Transaction = updated;
     if (updated.type === 'income') {
       const jars = await storageRef.current.getAllJars();
       toSave = { ...updated, allocationSnapshot: snapshotAllocations(jars) };
-      await applyIncomeSplit(toSave, 1);
+      if (updated.date <= today) await applyIncomeSplit(toSave, 1);
     } else {
-      await storageRef.current.adjustJarBalance(updated.jar, -updated.amount);
+      if (updated.date <= today) await storageRef.current.adjustJarBalance(updated.jar, -updated.amount);
     }
 
     await storageRef.current.updateTransaction(toSave);
@@ -161,7 +166,9 @@ export function useJars() {
     setJars(await storageRef.current.getAllJars());
   }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    storageRef.current.reconcileJarBalances().then(() => refresh());
+  }, [refresh]);
 
   const updateAllocation = async (id: JarId, pct: number) => {
     const j = jars.find(x => x.id === id);

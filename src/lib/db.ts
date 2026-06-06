@@ -217,6 +217,36 @@ export async function resetJarBalances() {
   }
 }
 
+// 오늘 이전 트랜잭션만으로 잔액을 재계산해 저장 (미래 날짜 트랜잭션 제외)
+export async function reconcileJarBalances(): Promise<void> {
+  const db = await getDB();
+  const transactions = await db.getAll('transactions');
+  const jars = await db.getAll('jars');
+  if (!jars.length) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  const balances: Record<string, number> = {};
+  for (const j of jars) balances[j.id] = 0;
+
+  for (const tx of transactions) {
+    if (tx.date > today) continue;
+    if (tx.type === 'income') {
+      const snap = tx.allocationSnapshot;
+      const totalPct = jars.reduce((s, j) => s + (snap?.[j.id] ?? j.allocationPct), 0) || 100;
+      for (const j of jars) {
+        const pct = snap?.[j.id] ?? j.allocationPct;
+        balances[j.id] += tx.amount * (pct / totalPct);
+      }
+    } else if (tx.jar && balances[tx.jar] !== undefined) {
+      balances[tx.jar] -= tx.amount;
+    }
+  }
+
+  for (const j of jars) {
+    await db.put('jars', { ...j, balance: balances[j.id] ?? 0 });
+  }
+}
+
 // Settings
 export async function getSetting(key: string): Promise<string | undefined> {
   const db = await getDB();

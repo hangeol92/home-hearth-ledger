@@ -142,9 +142,11 @@ export default function History() {
     setPendingDeleteId(null);
   };
 
-  // Determine oldest available month to prevent navigating too far back
   const oldestMonth = transactions.length
     ? transactions.reduce((min, tx) => (tx.date < min ? tx.date : min), transactions[0].date).slice(0, 7)
+    : viewMonth;
+  const latestMonth = transactions.length
+    ? transactions.reduce((max, tx) => (tx.date > max ? tx.date : max), transactions[0].date).slice(0, 7)
     : viewMonth;
 
   // Income auto-splits across all jars, so a single-jar filter shouldn't
@@ -178,7 +180,8 @@ export default function History() {
         const oldestYear = parseInt(oldestMonth.slice(0, 4));
         const currentYear = new Date().getFullYear();
         const currentMonth = toYearMonth(new Date());
-        const years = Array.from({ length: currentYear - oldestYear + 1 }, (_, i) => currentYear - i);
+        const latestYear = parseInt(latestMonth.slice(0, 4));
+        const years = Array.from({ length: latestYear - oldestYear + 1 }, (_, i) => latestYear - i);
         const MONTHS = Array.from({ length: 12 }, (_, i) =>
           new Date(2000, i, 1).toLocaleDateString(i18n.language, { month: 'short' })
         );
@@ -199,7 +202,7 @@ export default function History() {
                     <div className="grid grid-cols-4 gap-2">
                       {MONTHS.map((label, idx) => {
                         const ym = `${year}-${String(idx + 1).padStart(2, '0')}`;
-                        const disabled = ym < oldestMonth || ym > currentMonth;
+                        const disabled = ym < oldestMonth || ym > latestMonth;
                         const active = ym === viewMonth;
                         return (
                           <button
@@ -245,7 +248,7 @@ export default function History() {
           </button>
           <button
             onClick={() => setViewMonth(v => shiftMonth(v, 1))}
-            disabled={viewMonth >= toYearMonth(new Date())}
+            disabled={viewMonth >= latestMonth}
             className="flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30 active:bg-black/10"
             aria-label="Next month"
           >

@@ -98,7 +98,8 @@
     "householdSetup": "설정하기",
     "loginRequired": "로그인 필요",
     "privacy": "개인정보처리방침",
-    "terms": "이용약관"
+    "terms": "이용약관",
+    "periodGoal": "구간목표 설정"
   },
   "legal": {
     "privacyTitle": "개인정보처리방침",
@@ -153,7 +154,17 @@
     "late": "후반",
     "dayUnit": "일",
     "setBudget": "목표 설정",
-    "usagePct": "{{pct}}% 사용"
+    "usagePct": "{{pct}}% 사용",
+    "current": "현재"
+  },
+  "periodGoal": {
+    "title": "구간목표 설정",
+    "enable": "구간목표 사용",
+    "enableHint": "생활비를 구간별 목표 금액으로 관리합니다",
+    "pctHint": "생활비 월 총액 기준 구간별 비율 (합계 100%)",
+    "totalError": "비율 합계가 100%여야 합니다",
+    "sectionTitle": "구간목표",
+    "noIncome": "수입 없음"
   },
   "incomeCat": {
     "Salary": "월급",

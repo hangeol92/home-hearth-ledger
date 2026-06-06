@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1024px; height: 500px; overflow: hidden; background: #1a0e07; }
+</style>
+</head>
+<body>
+<svg width="1024" height="500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a0e07"/>
+      <stop offset="60%" stop-color="#2c1508"/>
+      <stop offset="100%" stop-color="#3d1a08"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="75%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d97706" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#d97706" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="20%" cy="80%" r="40%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pot1" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="50%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </linearGradient>
+    <linearGradient id="pot2" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="50%" stop-color="#b45309"/>
+      <stop offset="100%" stop-color="#5c2d07"/>
+    </linearGradient>
+    <linearGradient id="tagBg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#d97706" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#b45309" stop-opacity="1"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="potShadow">
+      <feDropShadow dx="4" dy="8" stdDeviation="8" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+    <clipPath id="clip">
+      <rect width="1024" height="500"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#clip)">
+    <!-- Background -->
+    <rect width="1024" height="500" fill="url(#bg)"/>
+    <rect width="1024" height="500" fill="url(#glow1)"/>
+    <rect width="1024" height="500" fill="url(#glow2)"/>
+
+    <!-- Subtle grid lines -->
+    <line x1="0" y1="250" x2="1024" y2="250" stroke="white" stroke-opacity="0.03" stroke-width="1"/>
+    <line x1="512" y1="0" x2="512" y2="500" stroke="white" stroke-opacity="0.03" stroke-width="1"/>
+
+    <!-- ── Onggi pots (right side) ─────────────────────────── -->
+
+    <!-- Pot macro: wide-belly onggi shape -->
+    <!-- Pot 3 (back-right, small) -->
+    <g transform="translate(890, 90) scale(0.62)" opacity="0.45" filter="url(#potShadow)">
+      <path d="M38,6 C26,6 18,11 15,21 L8,68 C6,82 10,96 20,103 L20,108 L56,108 L56,103 C66,96 70,82 68,68 L61,21 C58,11 50,6 38,6 Z" fill="url(#pot2)"/>
+      <path d="M28,6 L48,6 L46,2 L30,2 Z" fill="#92400e"/>
+      <ellipse cx="38" cy="2" rx="9" ry="2.5" fill="#6b2d0b"/>
+      <line x1="11" y1="42" x2="65" y2="42" stroke="#78350f" stroke-width="2" opacity="0.7"/>
+      <line x1="9" y1="60" x2="67" y2="60" stroke="#78350f" stroke-width="2" opacity="0.7"/>
+      <line x1="9" y1="78" x2="67" y2="78" stroke="#78350f" stroke-width="2" opacity="0.7"/>
+      <ellipse cx="26" cy="35" rx="7" ry="10" fill="white" fill-opacity="0.12"/>
+    </g>
+
+    <!-- Pot 2 (mid-right) -->
+    <g transform="translate(790, 60) scale(0.85)" opacity="0.7" filter="url(#potShadow)">
+      <path d="M38,6 C26,6 18,11 15,21 L8,68 C6,82 10,96 20,103 L20,108 L56,108 L56,103 C66,96 70,82 68,68 L61,21 C58,11 50,6 38,6 Z" fill="url(#pot1)"/>
+      <path d="M28,6 L48,6 L46,2 L30,2 Z" fill="#b45309"/>
+      <ellipse cx="38" cy="2" rx="9" ry="2.5" fill="#7c2d12"/>
+      <line x1="11" y1="42" x2="65" y2="42" stroke="#92400e" stroke-width="2" opacity="0.6"/>
+      <line x1="9" y1="60" x2="67" y2="60" stroke="#92400e" stroke-width="2" opacity="0.6"/>
+      <line x1="9" y1="78" x2="67" y2="78" stroke="#92400e" stroke-width="2" opacity="0.6"/>
+      <ellipse cx="26" cy="35" rx="7" ry="10" fill="white" fill-opacity="0.15"/>
+    </g>
+
+    <!-- Pot 1 (front-center-right, large, hero) -->
+    <g transform="translate(640, 30) scale(1.35)" filter="url(#potShadow)">
+      <path d="M38,6 C26,6 18,11 15,21 L8,68 C6,82 10,96 20,103 L20,108 L56,108 L56,103 C66,96 70,82 68,68 L61,21 C58,11 50,6 38,6 Z" fill="url(#pot1)"/>
+      <path d="M28,6 L48,6 L46,2 L30,2 Z" fill="#b45309"/>
+      <ellipse cx="38" cy="2" rx="9" ry="2.5" fill="#7c2d12"/>
+      <line x1="11" y1="42" x2="65" y2="42" stroke="#92400e" stroke-width="2.5" opacity="0.65"/>
+      <line x1="9" y1="60" x2="67" y2="60" stroke="#92400e" stroke-width="2.5" opacity="0.65"/>
+      <line x1="9" y1="78" x2="67" y2="78" stroke="#92400e" stroke-width="2.5" opacity="0.65"/>
+      <line x1="10" y1="93" x2="66" y2="93" stroke="#92400e" stroke-width="2" opacity="0.5"/>
+      <ellipse cx="25" cy="32" rx="8" ry="13" fill="white" fill-opacity="0.18"/>
+      <ellipse cx="50" cy="28" rx="3" ry="5" fill="white" fill-opacity="0.08"/>
+    </g>
+
+    <!-- Jar label badges -->
+    <rect x="651" y="208" rx="8" ry="8" width="46" height="20" fill="#d97706" fill-opacity="0.25"/>
+    <text x="674" y="222" text-anchor="middle" font-family="'Noto Sans KR', system-ui, sans-serif" font-size="11" fill="#fcd34d" font-weight="600">생활</text>
+
+    <rect x="758" y="192" rx="8" ry="8" width="46" height="20" fill="#d97706" fill-opacity="0.2"/>
+    <text x="781" y="206" text-anchor="middle" font-family="'Noto Sans KR', system-ui, sans-serif" font-size="11" fill="#fcd34d" fill-opacity="0.8" font-weight="600">투자</text>
+
+    <rect x="875" y="168" rx="8" ry="8" width="46" height="20" fill="#d97706" fill-opacity="0.15"/>
+    <text x="898" y="182" text-anchor="middle" font-family="'Noto Sans KR', system-ui, sans-serif" font-size="11" fill="#fcd34d" fill-opacity="0.6" font-weight="600">저축</text>
+
+    <!-- Vertical divider between text and pots -->
+    <line x1="600" y1="60" x2="600" y2="440" stroke="white" stroke-opacity="0.06" stroke-width="1"/>
+
+    <!-- ── Left text area ──────────────────────────────────── -->
+
+    <!-- App icon (mini onggi) -->
+    <rect x="64" y="68" width="52" height="52" rx="14" fill="#2c1508"/>
+    <g transform="translate(73, 72) scale(0.52)">
+      <path d="M38,6 C26,6 18,11 15,21 L8,68 C6,82 10,96 20,103 L20,108 L56,108 L56,103 C66,96 70,82 68,68 L61,21 C58,11 50,6 38,6 Z" fill="url(#pot1)"/>
+      <path d="M28,6 L48,6 L46,2 L30,2 Z" fill="#b45309"/>
+      <ellipse cx="38" cy="2" rx="9" ry="2.5" fill="#7c2d12"/>
+      <line x1="11" y1="42" x2="65" y2="42" stroke="#92400e" stroke-width="3" opacity="0.7"/>
+      <line x1="9" y1="66" x2="67" y2="66" stroke="#92400e" stroke-width="3" opacity="0.7"/>
+      <ellipse cx="25" cy="32" rx="8" ry="13" fill="white" fill-opacity="0.18"/>
+    </g>
+
+    <!-- App name -->
+    <text x="64" y="175" font-family="'SF Pro Display', -apple-system, system-ui, sans-serif" font-size="58" font-weight="800" fill="white" letter-spacing="-1">Five Onggis</text>
+
+    <!-- Tagline -->
+    <text x="66" y="215" font-family="'Noto Sans KR', system-ui, sans-serif" font-size="20" fill="#fbbf24" font-weight="500" letter-spacing="0.3">다섯 항아리로 관리하는 스마트 가족 가계부</text>
+
+    <!-- Horizontal rule -->
+    <rect x="64" y="238" width="320" height="1.5" rx="1" fill="url(#tagBg)" opacity="0.5"/>
+
+    <!-- Feature list -->
+    <g font-family="'Noto Sans KR', system-ui, sans-serif" font-size="15.5" fill="#d1d5db">
+
+      <!-- Row 1 -->
+      <circle cx="76" cy="272" r="4.5" fill="#d97706"/>
+      <text x="92" y="277" font-weight="500">수입을 5개 항아리에 자동 분배</text>
+
+      <!-- Row 2 -->
+      <circle cx="76" cy="308" r="4.5" fill="#d97706"/>
+      <text x="92" y="313" font-weight="500">가족 구성원별 지출 추적</text>
+
+      <!-- Row 3 -->
+      <circle cx="76" cy="344" r="4.5" fill="#d97706"/>
+      <text x="92" y="349" font-weight="500">월별 예산 및 구간 목표 관리</text>
+
+      <!-- Row 4 -->
+      <circle cx="76" cy="380" r="4.5" fill="#d97706"/>
+      <text x="92" y="385" font-weight="500">한국어 · 英語 · 日本語 지원</text>
+    </g>
+
+    <!-- Bottom badge -->
+    <rect x="64" y="418" rx="20" ry="20" width="240" height="36" fill="url(#tagBg)" opacity="0.9"/>
+    <text x="184" y="441" text-anchor="middle" font-family="'Noto Sans KR', system-ui, sans-serif" font-size="14" fill="white" font-weight="700" letter-spacing="0.5">Smart Family Finance</text>
+
+  </g>
+</svg>
+</body>
+</html>

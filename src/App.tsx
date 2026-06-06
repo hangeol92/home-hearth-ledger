@@ -24,6 +24,7 @@ import LanguagePage from "@/pages/settings/LanguagePage";
 import CurrencyPage from "@/pages/settings/CurrencyPage";
 import PrivacyPage from "@/pages/settings/PrivacyPage";
 import TermsPage from "@/pages/settings/TermsPage";
+import PeriodGoalPage from "@/pages/settings/PeriodGoalPage";
 import { SubscriptionProvider } from "@/components/SubscriptionProvider";
 import { useSubscription } from "@/hooks/useSubscription";
 import PaywallSheet from "@/components/paywall/PaywallSheet";
@@ -89,6 +90,7 @@ const App = () => {
           <Route path="/settings/help" element={<HelpPage />} />
           <Route path="/settings/privacy" element={<PrivacyPage />} />
           <Route path="/settings/terms" element={<TermsPage />} />
+          <Route path="/settings/period-goal" element={<PeriodGoalPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

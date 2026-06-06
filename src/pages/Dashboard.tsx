@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { useTransactions, useMembers, useCurrency, useJars, usePeriodBudgets } from '@/hooks/useStore';
+import { useTransactions, useMembers, useCurrency, useJars } from '@/hooks/useStore';
 import { JARS, BUDGET_PERIOD_DAYS, getCurrentBudgetPeriod } from '@/types';
-import type { JarId, BudgetPeriod } from '@/types';
+import type { JarId } from '@/types';
+import { usePeriodGoalSettings } from '@/hooks/usePeriodGoalSettings';
 import { JarIcon } from '@/components/JarIcon';
 import { useTranslation } from 'react-i18next';
 import { getTxColorClass, toYearMonth, computePeriodNet } from '@/lib/utils';
@@ -34,19 +35,15 @@ export default function Dashboard() {
   const monthPrefix = toYearMonth(now);
   const prefix = period === 'month' ? monthPrefix : yearPrefix;
 
-  const currentPeriod: BudgetPeriod = getCurrentBudgetPeriod();
-  const { periodBudgets } = usePeriodBudgets(monthPrefix);
+  const { settings: goalSettings } = usePeriodGoalSettings();
+  const currentPeriod = getCurrentBudgetPeriod();
   const periodRange = BUDGET_PERIOD_DAYS[currentPeriod];
 
-  const periodStart = `${monthPrefix}-${String(periodRange.start).padStart(2, '0')}`;
   const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const periodEndDay = Math.min(periodRange.end, lastDayOfMonth);
-  const periodEnd = `${monthPrefix}-${String(periodEndDay).padStart(2, '0')}`;
-
+  const periodStart = `${monthPrefix}-${String(periodRange.start).padStart(2, '0')}`;
+  const periodEnd   = `${monthPrefix}-${String(periodEndDay).padStart(2, '0')}`;
   const daysRemainingInPeriod = periodEndDay - now.getDate();
-
-  const periodLivingBudgets = periodBudgets.filter(pb => pb.period === currentPeriod);
-  const totalPeriodTarget = periodLivingBudgets.reduce((s, pb) => s + pb.targetAmount, 0);
 
   const periodLivingSpent = transactions
     .filter(tx =>
@@ -57,12 +54,24 @@ export default function Dashboard() {
     )
     .reduce((s, tx) => s + tx.amount, 0);
 
+  const periodTxs = transactions.filter(tx => tx.date.startsWith(prefix));
+  const monthTxs = transactions.filter(tx => tx.date.startsWith(monthPrefix));
+
+  const livingBudget = monthTxs
+    .filter(tx => tx.type === 'income')
+    .reduce((sum, tx) => {
+      const snap = tx.allocationSnapshot;
+      const totalPct = jars.reduce((s, j) => s + (snap?.[j.id] ?? j.allocationPct), 0) || 100;
+      const livingPct = snap?.['living'] ?? jars.find(j => j.id === 'living')?.allocationPct ?? 60;
+      return sum + tx.amount * (livingPct / totalPct);
+    }, 0);
+
+  const periodPct = { early: goalSettings.earlyPct, mid: goalSettings.midPct, late: goalSettings.latePct }[currentPeriod];
+  const totalPeriodTarget = goalSettings.enabled ? livingBudget * periodPct / 100 : 0;
+
   const periodUsagePct = totalPeriodTarget > 0
     ? Math.min(100, Math.round((periodLivingSpent / totalPeriodTarget) * 100))
     : 0;
-
-  const periodTxs = transactions.filter(tx => tx.date.startsWith(prefix));
-  const monthTxs = transactions.filter(tx => tx.date.startsWith(monthPrefix));
   const totalBalance = jars.reduce((s, j) => s + j.balance, 0);
   const recentTx = transactions.slice(0, 8);
 
@@ -208,52 +217,44 @@ export default function Dashboard() {
             {t('dashboard.balanceSpentMonth', { pct: usagePct })}
           </p>
 
-          {/* 구간 잔여금 서브 섹션 */}
-          <div className="mt-3 pt-3 border-t border-border">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                {t(`period.${currentPeriod}`)}
-                <span className="ml-1 text-muted-foreground/60 normal-case">
-                  ({periodRange.start}–{periodEndDay}{t('period.dayUnit')})
-                </span>
-              </p>
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                daysRemainingInPeriod <= 2
-                  ? 'bg-red-100 text-red-600'
-                  : daysRemainingInPeriod <= 5
-                    ? 'bg-amber-100 text-amber-600'
-                    : 'bg-secondary text-muted-foreground'
-              }`}>
-                D-{daysRemainingInPeriod}
-              </span>
-            </div>
-            <div className="flex items-baseline gap-1 mb-1.5">
-              <span className="text-sm font-bold">{format(periodLivingSpent)}</span>
-              {totalPeriodTarget > 0 ? (
-                <span className="text-xs text-muted-foreground">/ {format(totalPeriodTarget)}</span>
-              ) : (
-                <button onClick={() => navigate('/budget')} className="text-xs text-primary font-medium">
-                  {t('period.setBudget')}
-                </button>
-              )}
-            </div>
-            {totalPeriodTarget > 0 && (
-              <>
-                <div className="h-1 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${periodUsagePct}%`,
-                      background: periodUsagePct >= 90 ? '#EF4444' : periodUsagePct >= 70 ? '#F59E0B' : '#10B981',
-                    }}
-                  />
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  {t('period.usagePct', { pct: periodUsagePct })}
+          {/* 구간목표 서브 섹션 — goalSettings.enabled일 때만 표시 */}
+          {goalSettings.enabled && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                  {t(`period.${currentPeriod}`)}
+                  <span className="ml-1 text-muted-foreground/60 normal-case">
+                    ({periodRange.start}–{periodEndDay}{t('period.dayUnit')})
+                  </span>
                 </p>
-              </>
-            )}
-          </div>
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                  daysRemainingInPeriod <= 2
+                    ? 'bg-red-100 text-red-600'
+                    : daysRemainingInPeriod <= 5
+                      ? 'bg-amber-100 text-amber-600'
+                      : 'bg-secondary text-muted-foreground'
+                }`}>
+                  D-{daysRemainingInPeriod}
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1 mb-1.5">
+                <span className="text-sm font-bold">{format(periodLivingSpent)}</span>
+                <span className="text-xs text-muted-foreground">/ {format(totalPeriodTarget)}</span>
+              </div>
+              <div className="h-1 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${periodUsagePct}%`,
+                    background: periodUsagePct >= 90 ? '#EF4444' : periodUsagePct >= 70 ? '#F59E0B' : '#10B981',
+                  }}
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {t('period.usagePct', { pct: periodUsagePct })}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

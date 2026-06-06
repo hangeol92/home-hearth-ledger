@@ -118,7 +118,15 @@ export default function AddTransaction() {
     if (isEdit && id) {
       const original = transactions.find(t => t.id === id);
       if (!original) return;
-      await update({ ...original, type, amount: parsedAmount, jar, subCategory, note, date, memberId, ...extraFields });
+      await update({
+        ...original,
+        type,
+        amount: parsedAmount,
+        jar: type === 'income' ? undefined as unknown as JarId : jar,
+        subCategory: type === 'income' ? incomeCategory : subCategory,
+        note, date, memberId,
+        ...extraFields,
+      });
     } else {
       await add({
         id: crypto.randomUUID(), type,

@@ -8,7 +8,7 @@ import { JARS } from '@/types';
 import {
   Download, Trash2, LogOut, AlertTriangle, Eye, EyeOff,
   ChevronRight, Users, Gem, Globe, DollarSign, Home, Star,
-  HelpCircle, Mail, Info, Shield, FileText,
+  HelpCircle, Mail, Info, Shield, FileText, Target,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
@@ -218,6 +218,7 @@ export default function SettingsPage() {
       <SectionCard>
         <SettingsRow icon={<Users className="h-4 w-4" />} label={t('members.title')} onPress={() => navigate('/members')} />
         <SettingsRow icon={<Home className="h-4 w-4" />} label={t('settings.fiveJars')} onPress={() => navigate('/settings/jars')} />
+        <SettingsRow icon={<Target className="h-4 w-4" />} label={t('settings.periodGoal')} onPress={() => navigate('/settings/period-goal')} />
       </SectionCard>
 
       {/* 앱 설정 */}

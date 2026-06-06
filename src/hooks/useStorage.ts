@@ -59,5 +59,8 @@ export function useStorage() {
 
     resetJarBalances: () =>
       cloud ? apiJars.resetJarBalances() : localDb.resetJarBalances(),
+
+    reconcileJarBalances: () =>
+      cloud ? Promise.resolve() : localDb.reconcileJarBalances(),
   };
 }

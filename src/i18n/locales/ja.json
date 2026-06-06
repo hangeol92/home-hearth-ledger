@@ -98,7 +98,8 @@
     "householdSetup": "設定する",
     "loginRequired": "要ログイン",
     "privacy": "プライバシーポリシー",
-    "terms": "利用規約"
+    "terms": "利用規約",
+    "periodGoal": "期間目標の設定"
   },
   "legal": {
     "privacyTitle": "プライバシーポリシー",
@@ -153,7 +154,17 @@
     "late": "下旬",
     "dayUnit": "日",
     "setBudget": "目標を設定",
-    "usagePct": "{{pct}}% 使用"
+    "usagePct": "{{pct}}% 使用",
+    "current": "現在"
+  },
+  "periodGoal": {
+    "title": "期間目標の設定",
+    "enable": "期間目標を使用",
+    "enableHint": "生活費を期間ごとの目標金額で管理します",
+    "pctHint": "月の生活費に対する期間ごとの割合（合計100%）",
+    "totalError": "割合の合計が100%になる必要があります",
+    "sectionTitle": "期間目標",
+    "noIncome": "収入なし"
   },
   "incomeCat": {
     "Salary": "給料",
