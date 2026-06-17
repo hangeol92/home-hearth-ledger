@@ -208,15 +208,6 @@ export async function adjustJarBalance(id: JarId, delta: number) {
   await db.put('jars', j);
 }
 
-export async function resetJarBalances() {
-  const db = await getDB();
-  const all = await db.getAll('jars');
-  for (const j of all) {
-    j.balance = 0;
-    await db.put('jars', j);
-  }
-}
-
 // 오늘 이전 트랜잭션만으로 잔액을 재계산해 저장 (미래 날짜 트랜잭션 제외)
 export async function reconcileJarBalances(): Promise<void> {
   const db = await getDB();

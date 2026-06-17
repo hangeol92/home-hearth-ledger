@@ -77,8 +77,6 @@
     "fiveJars": "5つの壺の配分",
     "fiveJarsHint": "収入はこの割合で各壺に自動振り分けされます。合計100%にしてください。",
     "totalPct": "合計",
-    "resetBalances": "壺の残高をリセット",
-    "confirmReset": "すべての壺の残高をゼロにしますか？",
     "invalidTotal": "配分の合計は100%にしてください",
     "account": "アカウント",
     "login": "ログイン",

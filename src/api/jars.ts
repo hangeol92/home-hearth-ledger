@@ -60,12 +60,3 @@ export async function adjustJarBalance(id: JarId, delta: number): Promise<void> 
   });
   if (error) throw error;
 }
-
-export async function resetJarBalances(): Promise<void> {
-  const householdId = await getHouseholdId();
-  const { error } = await supabase
-    .from('jars')
-    .update({ balance: 0 })
-    .eq('household_id', householdId);
-  if (error) throw error;
-}

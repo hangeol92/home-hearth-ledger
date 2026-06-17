@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, RotateCcw } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { useJars, useCurrency } from '@/hooks/useStore';
 import { JARS } from '@/types';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 
 export default function JarAllocPage() {
   const navigate = useNavigate();
-  const { jars, updateAllocation, reset } = useJars();
+  const { jars, updateAllocation } = useJars();
   const { symbol, format } = useCurrency();
   const { t } = useTranslation();
 
@@ -53,13 +53,6 @@ export default function JarAllocPage() {
     navigate(-1);
   };
 
-  const handleReset = async () => {
-    if (window.confirm(t('settings.confirmReset'))) {
-      await reset();
-      toast({ title: '✓' });
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       <div className="flex items-center gap-2 px-3 pb-4 pt-2">
@@ -67,10 +60,6 @@ export default function JarAllocPage() {
           <ChevronLeft className="h-6 w-6" />
         </button>
         <h1 className="text-lg font-semibold flex-1">{t('settings.fiveJars')}</h1>
-        <button onClick={handleReset} className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-muted-foreground">
-          <RotateCcw className="h-3.5 w-3.5" />
-          {t('settings.resetBalances')}
-        </button>
       </div>
 
       <div className="px-5 space-y-5">

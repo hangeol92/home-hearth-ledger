@@ -148,6 +148,10 @@ export default function History() {
   const latestMonth = transactions.length
     ? transactions.reduce((max, tx) => (tx.date > max ? tx.date : max), transactions[0].date).slice(0, 7)
     : viewMonth;
+  // Upper bound for navigation: allow browsing up to the current month even when
+  // the newest transaction is in the past, and out to future months that have transactions.
+  const currentMonthYM = toYearMonth(new Date());
+  const maxMonth = latestMonth > currentMonthYM ? latestMonth : currentMonthYM;
 
   // Income auto-splits across all jars, so a single-jar filter shouldn't
   // include it (otherwise income shows up under whatever jar id was set,
@@ -178,10 +182,8 @@ export default function History() {
       {/* Month picker popup */}
       {showMonthPicker && (() => {
         const oldestYear = parseInt(oldestMonth.slice(0, 4));
-        const currentYear = new Date().getFullYear();
-        const currentMonth = toYearMonth(new Date());
-        const latestYear = parseInt(latestMonth.slice(0, 4));
-        const years = Array.from({ length: latestYear - oldestYear + 1 }, (_, i) => latestYear - i);
+        const maxYear = parseInt(maxMonth.slice(0, 4));
+        const years = Array.from({ length: maxYear - oldestYear + 1 }, (_, i) => maxYear - i);
         const MONTHS = Array.from({ length: 12 }, (_, i) =>
           new Date(2000, i, 1).toLocaleDateString(i18n.language, { month: 'short' })
         );
@@ -202,7 +204,7 @@ export default function History() {
                     <div className="grid grid-cols-4 gap-2">
                       {MONTHS.map((label, idx) => {
                         const ym = `${year}-${String(idx + 1).padStart(2, '0')}`;
-                        const disabled = ym < oldestMonth || ym > latestMonth;
+                        const disabled = ym < oldestMonth || ym > maxMonth;
                         const active = ym === viewMonth;
                         return (
                           <button
@@ -248,7 +250,7 @@ export default function History() {
           </button>
           <button
             onClick={() => setViewMonth(v => shiftMonth(v, 1))}
-            disabled={viewMonth >= latestMonth}
+            disabled={viewMonth >= maxMonth}
             className="flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30 active:bg-black/10"
             aria-label="Next month"
           >
