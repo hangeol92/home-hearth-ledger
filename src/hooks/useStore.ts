@@ -177,12 +177,7 @@ export function useJars() {
     await refresh();
   };
 
-  const reset = async () => {
-    await storageRef.current.resetJarBalances();
-    await refresh();
-  };
-
-  return { jars, updateAllocation, reset, refresh };
+  return { jars, updateAllocation, refresh };
 }
 
 export function useCurrency() {

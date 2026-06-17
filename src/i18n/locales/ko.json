@@ -77,8 +77,6 @@
     "fiveJars": "다섯 항아리 배분",
     "fiveJarsHint": "수입은 이 비율로 각 항아리에 자동 분배됩니다. 합계 100%여야 합니다.",
     "totalPct": "합계",
-    "resetBalances": "항아리 잔액 초기화",
-    "confirmReset": "모든 항아리 잔액을 0으로 초기화할까요?",
     "invalidTotal": "배분 합계는 100%여야 합니다",
     "account": "계정",
     "login": "로그인",

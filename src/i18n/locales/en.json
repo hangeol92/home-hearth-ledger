@@ -77,8 +77,6 @@
     "fiveJars": "Five Onggis Allocation",
     "fiveJarsHint": "Income auto-splits across jars by these percentages. Must total 100%.",
     "totalPct": "Total",
-    "resetBalances": "Reset jar balances",
-    "confirmReset": "Reset all jar balances to zero?",
     "invalidTotal": "Allocations must sum to 100%",
     "account": "Account",
     "login": "Log In",

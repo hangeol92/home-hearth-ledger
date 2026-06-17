@@ -57,9 +57,6 @@ export function useStorage() {
     adjustJarBalance: (id: JarId, delta: number) =>
       cloud ? apiJars.adjustJarBalance(id, delta) : localDb.adjustJarBalance(id, delta),
 
-    resetJarBalances: () =>
-      cloud ? apiJars.resetJarBalances() : localDb.resetJarBalances(),
-
     reconcileJarBalances: () =>
       cloud ? Promise.resolve() : localDb.reconcileJarBalances(),
   };
