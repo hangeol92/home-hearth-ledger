@@ -71,6 +71,7 @@
     "currency": "通貨",
     "language": "言語",
     "exportCsv": "CSVエクスポート",
+    "exportFailed": "エクスポートに失敗しました",
     "clearAll": "すべてのデータを削除",
     "noData": "エクスポートするデータがありません",
     "confirmClear": "本当にすべてのデータを削除しますか？",

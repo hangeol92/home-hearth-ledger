@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCurrency, useTransactions, useJars } from '@/hooks/useStore';
+import { useCurrency, useTransactions, useJars, useMembers } from '@/hooks/useStore';
+import { buildTransactionsCsv, saveCsv } from '@/utils/exportCsv';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { clearAllData } from '@/lib/db';
@@ -59,6 +60,7 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const { currency } = useCurrency();
   const { transactions } = useTransactions();
+  const { members } = useMembers();
   const { jars, updateAllocation } = useJars();
   const { t, i18n } = useTranslation();
   const { signOut, user } = useAuth();
@@ -80,18 +82,17 @@ export default function SettingsPage() {
     catch { toast({ title: 'Sign out failed', variant: 'destructive' }); }
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!isPremium) { openPaywall(); return; }
     if (transactions.length === 0) { toast({ title: t('settings.noData') }); return; }
-    const header = 'Date,Type,Jar,SubCategory,Amount,Note,Member\n';
-    const rows = transactions.map(tx =>
-      `${tx.date},${tx.type},${tx.jar},${tx.subCategory},${tx.amount},"${tx.note}",${tx.memberId}`
-    ).join('\n');
-    const blob = new Blob([header + rows], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url;
-    a.download = `five-jars-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click(); URL.revokeObjectURL(url);
+    try {
+      const csv = buildTransactionsCsv(transactions, members);
+      await saveCsv(csv, `five-jars-${new Date().toISOString().split('T')[0]}.csv`);
+    } catch (e) {
+      // 공유 시트 취소는 에러로 오므로 조용히 무시
+      if (e instanceof Error && /cancel/i.test(e.message)) return;
+      toast({ title: t('settings.exportFailed'), variant: 'destructive' });
+    }
   };
 
   const handleClearConfirm = async () => {

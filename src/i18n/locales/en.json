@@ -71,6 +71,7 @@
     "currency": "Currency",
     "language": "Language",
     "exportCsv": "Export as CSV",
+    "exportFailed": "Export failed",
     "clearAll": "Clear all data",
     "noData": "No data to export",
     "confirmClear": "Are you sure? This will delete all data.",

@@ -71,6 +71,7 @@
     "currency": "통화",
     "language": "언어",
     "exportCsv": "CSV 내보내기",
+    "exportFailed": "내보내기에 실패했습니다",
     "clearAll": "모든 데이터 삭제",
     "noData": "내보낼 데이터가 없습니다",
     "confirmClear": "정말 모든 데이터를 삭제하시겠습니까?",
