@@ -98,7 +98,13 @@
     "loginRequired": "Login required",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
-    "periodGoal": "Period Goals"
+    "periodGoal": "Period Goals",
+    "recurring": "Recurring Transactions"
+  },
+  "recurring": {
+    "empty": "No recurring transactions.\nTurn on 'Repeat monthly' when adding a transaction to see it here.",
+    "monthlyOn": "Monthly on day {{day}}",
+    "hint": "Recurring rules are stored on this device. When you open the app, due transactions are added automatically."
   },
   "legal": {
     "privacyTitle": "Privacy Policy",
@@ -142,6 +148,8 @@
     "shared": "Shared",
     "personalMoney": "Personal money",
     "personalMoneyHint": "To be reimbursed to shared account",
+    "repeatMonthly": "Repeat monthly",
+    "repeatMonthlyHint": "Added automatically on the same day each month",
     "save": "Save",
     "update": "Update",
     "noMembers": "Add a family member first",

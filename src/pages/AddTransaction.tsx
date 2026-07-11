@@ -20,6 +20,7 @@ import {
   type MemberRole, type LivingMainCategory, type IncomeMainCategory,
 } from '@/types';
 import { useCustomCategories } from '@/hooks/useCustomCategories';
+import { useRecurringRules } from '@/hooks/useRecurringRules';
 import type { TransactionType, JarId } from '@/types';
 import type { ReceiptParseResult } from '@/utils/receiptParser';
 import { Button } from '@/components/ui/button';
@@ -71,6 +72,8 @@ export default function AddTransaction() {
   const [newSubName, setNewSubName] = useState('');
   const [payer, setPayer] = useState<string>('shared');
   const [isPersonalMoney, setIsPersonalMoney] = useState(false);
+  const [repeatMonthly, setRepeatMonthly] = useState(false);
+  const { add: addRecurringRule } = useRecurringRules();
 
   useEffect(() => {
     if (!isEdit || !id) return;
@@ -137,6 +140,21 @@ export default function AddTransaction() {
         createdAt: new Date().toISOString(),
         ...extraFields,
       });
+      if (repeatMonthly) {
+        addRecurringRule({
+          id: crypto.randomUUID(),
+          dayOfMonth: Number(date.split('-')[2]),
+          lastAppliedMonth: date.slice(0, 7),
+          template: {
+            type,
+            amount: parsedAmount,
+            jar: type === 'income' ? undefined as unknown as JarId : jar,
+            subCategory: type === 'income' ? incomeCategory : subCategory,
+            note, memberId,
+            ...extraFields,
+          },
+        });
+      }
     }
     navigate(-1);
   };
@@ -437,6 +455,21 @@ export default function AddTransaction() {
           <label className="text-sm font-medium text-muted-foreground mb-2 block">{t('add.date')}</label>
           <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="rounded-xl" />
         </div>
+
+        {/* 5-1. 매월 반복 — 신규 등록 시에만 */}
+        {!isEdit && (
+          <div className="flex items-center justify-between rounded-xl bg-secondary/60 px-4 py-3">
+            <div>
+              <p className="text-sm font-medium">{t('add.repeatMonthly')}</p>
+              <p className="text-xs text-muted-foreground">{t('add.repeatMonthlyHint')}</p>
+            </div>
+            <button
+              onClick={() => setRepeatMonthly(v => !v)}
+              className={`relative w-11 h-6 rounded-full transition-colors ${repeatMonthly ? 'bg-teal-500' : 'bg-gray-300'}`}>
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${repeatMonthly ? 'translate-x-5' : ''}`} />
+            </button>
+          </div>
+        )}
 
         {/* 6. 멤버 — 멤버가 없으면 섹션 전체 숨김, Payer 자동 연동 */}
         {visibleMembers.length > 0 && (

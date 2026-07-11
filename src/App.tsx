@@ -25,6 +25,8 @@ import CurrencyPage from "@/pages/settings/CurrencyPage";
 import PrivacyPage from "@/pages/settings/PrivacyPage";
 import TermsPage from "@/pages/settings/TermsPage";
 import PeriodGoalPage from "@/pages/settings/PeriodGoalPage";
+import RecurringPage from "@/pages/settings/RecurringPage";
+import RecurringRunner from "@/components/RecurringRunner";
 import { SubscriptionProvider } from "@/components/SubscriptionProvider";
 import { useSubscription } from "@/hooks/useSubscription";
 import PaywallSheet from "@/components/paywall/PaywallSheet";
@@ -69,6 +71,7 @@ const App = () => {
         <SubscriptionProvider>
         <PaywallBridge />
         <SyncStatus />
+        <RecurringRunner />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
@@ -91,6 +94,7 @@ const App = () => {
           <Route path="/settings/privacy" element={<PrivacyPage />} />
           <Route path="/settings/terms" element={<TermsPage />} />
           <Route path="/settings/period-goal" element={<PeriodGoalPage />} />
+          <Route path="/settings/recurring" element={<RecurringPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

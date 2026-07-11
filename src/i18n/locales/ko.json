@@ -98,7 +98,13 @@
     "loginRequired": "로그인 필요",
     "privacy": "개인정보처리방침",
     "terms": "이용약관",
-    "periodGoal": "구간목표 설정"
+    "periodGoal": "구간목표 설정",
+    "recurring": "반복 거래"
+  },
+  "recurring": {
+    "empty": "반복 거래가 없습니다.\n거래 등록 시 '매월 반복'을 켜면 여기에 표시됩니다.",
+    "monthlyOn": "매월 {{day}}일",
+    "hint": "반복 거래는 이 기기에 저장되며, 앱을 열 때 해당 날짜가 지난 거래를 자동으로 등록합니다."
   },
   "legal": {
     "privacyTitle": "개인정보처리방침",
@@ -142,6 +148,8 @@
     "shared": "공동",
     "personalMoney": "개인돈 사용",
     "personalMoneyHint": "나중에 공동 계좌에 입금",
+    "repeatMonthly": "매월 반복",
+    "repeatMonthlyHint": "매월 같은 날에 자동으로 등록됩니다",
     "save": "저장",
     "update": "수정",
     "noMembers": "먼저 가족 구성원을 추가하세요",

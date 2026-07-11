@@ -141,6 +141,14 @@ export interface Transaction {
   isPersonalMoney?: boolean;  // 개인돈 사용 여부
 }
 
+// ── 반복 거래 (기기별 localStorage 저장, RecurringRunner가 매월 자동 등록) ──────
+export interface RecurringRule {
+  id: string;
+  dayOfMonth: number;        // 1–31, 말일보다 크면 해당 월 말일로 조정
+  lastAppliedMonth: string;  // YYYY-MM — 마지막으로 등록된 달
+  template: Omit<Transaction, 'id' | 'date' | 'createdAt' | 'allocationSnapshot'>;
+}
+
 export interface JarBalance {
   id: JarId;
   balance: number;

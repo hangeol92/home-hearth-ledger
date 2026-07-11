@@ -98,7 +98,13 @@
     "loginRequired": "要ログイン",
     "privacy": "プライバシーポリシー",
     "terms": "利用規約",
-    "periodGoal": "期間目標の設定"
+    "periodGoal": "期間目標の設定",
+    "recurring": "定期取引"
+  },
+  "recurring": {
+    "empty": "定期取引はありません。\n取引登録時に「毎月繰り返す」をオンにするとここに表示されます。",
+    "monthlyOn": "毎月{{day}}日",
+    "hint": "定期取引はこの端末に保存され、アプリを開いたときに期日を過ぎた取引が自動登録されます。"
   },
   "legal": {
     "privacyTitle": "プライバシーポリシー",
@@ -142,6 +148,8 @@
     "shared": "共同",
     "personalMoney": "個人のお金",
     "personalMoneyHint": "後で共同口座に入金予定",
+    "repeatMonthly": "毎月繰り返す",
+    "repeatMonthlyHint": "毎月同じ日に自動登録されます",
     "save": "保存",
     "update": "更新",
     "noMembers": "先に家族メンバーを追加してください",
