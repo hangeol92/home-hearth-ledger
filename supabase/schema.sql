@@ -90,6 +90,17 @@ begin
 end;
 $$;
 
+-- Realtime: publish household tables so family members see each other's
+-- changes live (client subscribes via postgres_changes; RLS still applies)
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables
+                 where pubname = 'supabase_realtime' and tablename = 'transactions') then
+    alter publication supabase_realtime add table transactions, jars, budgets, members;
+  end if;
+end;
+$$;
+
 -- Subscriptions (managed by RevenueCat webhook → Edge Function)
 create table if not exists subscriptions (
   user_id uuid primary key references auth.users(id) on delete cascade,

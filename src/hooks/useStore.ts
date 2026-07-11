@@ -116,6 +116,16 @@ export function useBudgets() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('budgets-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'budgets' }, () => {
+        refresh();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refresh]);
+
   const save = async (b: Budget) => {
     await storageRef.current.saveBudget(b);
     await refresh();
@@ -140,6 +150,16 @@ export function useMembers() {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('members-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, () => {
+        refresh();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refresh]);
 
   const save = async (m: FamilyMember) => {
     await storageRef.current.saveMember(m);
@@ -168,6 +188,16 @@ export function useJars() {
 
   useEffect(() => {
     storageRef.current.reconcileJarBalances().then(() => refresh());
+  }, [refresh]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('jars-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'jars' }, () => {
+        refresh();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [refresh]);
 
   const updateAllocation = async (id: JarId, pct: number) => {
