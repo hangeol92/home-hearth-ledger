@@ -12,11 +12,12 @@ export interface Subscription {
 
 export async function getActiveSubscription(userId: string): Promise<Subscription | null> {
   try {
+    // 'cancelled' = 자동갱신 해제일 뿐, expires_at까지는 이용 가능
     const { data, error } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', userId)
-      .eq('status', 'active')
+      .in('status', ['active', 'cancelled'])
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
     if (error || !data) return null;

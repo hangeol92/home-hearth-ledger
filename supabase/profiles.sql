@@ -9,12 +9,6 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
--- Users can only read and write their own profile
-CREATE POLICY "profiles_select_own" ON profiles
-  FOR SELECT USING (auth.uid() = id);
-
-CREATE POLICY "profiles_insert_own" ON profiles
-  FOR INSERT WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "profiles_update_own" ON profiles
-  FOR UPDATE USING (auth.uid() = id);
+-- Policies live in rls.sql ("users read/insert/update own profile").
+-- The old profiles_*_own policies were removed: the UPDATE one had no WITH CHECK,
+-- and permissive policies OR together, which allowed is_admin self-escalation.

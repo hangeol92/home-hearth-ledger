@@ -34,7 +34,11 @@ create table if not exists transactions (
   household_id uuid not null references households(id) on delete cascade,
   type text not null check (type in ('income', 'expense')),
   amount numeric not null check (amount > 0),
-  jar text not null check (jar in ('giving', 'investing', 'savings', 'living', 'seed')),
+  -- 수입 거래는 jar 없이 저장(항아리에 비율 분배), 지출은 특정 jar에서 차감
+  jar text check (
+    jar in ('giving', 'investing', 'savings', 'living', 'seed')
+    or (type = 'income' and jar is null)
+  ),
   sub_category text not null default '',
   category text,
   note text not null default '',
@@ -67,9 +71,16 @@ create table if not exists jars (
 );
 
 -- Atomic jar balance adjustment (prevents race condition from read-modify-write)
+-- security definer bypasses RLS, so the caller's household is verified explicitly
 create or replace function adjust_jar_balance(p_household_id uuid, p_jar_id text, p_delta numeric)
-returns void language plpgsql security definer as $$
+returns void language plpgsql security definer
+set search_path = public
+as $$
 begin
+  if current_household_id() is null
+     or p_household_id is distinct from current_household_id() then
+    raise exception 'Unauthorized';
+  end if;
   update jars
   set balance = balance + p_delta
   where household_id = p_household_id and id = p_jar_id;
@@ -104,7 +115,9 @@ create trigger subscriptions_updated_at
 
 -- Admin stats: returns aggregated metrics; only accessible to is_admin = true users
 create or replace function get_admin_stats()
-returns json language plpgsql security definer as $$
+returns json language plpgsql security definer
+set search_path = public
+as $$
 begin
   if not exists (select 1 from profiles where id = auth.uid() and is_admin = true) then
     raise exception 'Unauthorized';
@@ -129,7 +142,9 @@ create or replace function get_admin_users(p_limit int default 30)
 returns table (
   id uuid, display_name text, created_at timestamptz,
   household_id uuid, sub_status text, sub_plan text, sub_expires_at timestamptz
-) language plpgsql security definer as $$
+) language plpgsql security definer
+set search_path = public
+as $$
 begin
   if not exists (select 1 from profiles where id = auth.uid() and is_admin = true) then
     raise exception 'Unauthorized';
@@ -146,13 +161,52 @@ begin
 end;
 $$;
 
--- Atomic invite code join: lookup (bypasses RLS) + profile update + code rotation
+-- Invite code generator: 8 chars from a 32-char alphabet (40 bits, no modulo bias)
+create or replace function generate_invite_code()
+returns text language plpgsql volatile
+set search_path = public
+as $$
+declare
+  bytes bytea := extensions.gen_random_bytes(8);
+  alphabet text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  result text := '';
+begin
+  for i in 0..7 loop
+    result := result || substr(alphabet, get_byte(bytes, i) % 32 + 1, 1);
+  end loop;
+  return result;
+end;
+$$;
+
+-- Join attempt log for brute-force rate limiting.
+-- RLS enabled with no policies: only security definer functions can touch it.
+create table if not exists invite_join_attempts (
+  user_id uuid not null,
+  attempted_at timestamptz not null default now()
+);
+create index if not exists invite_join_attempts_user_time
+  on invite_join_attempts (user_id, attempted_at desc);
+alter table invite_join_attempts enable row level security;
+
+-- Atomic invite code join: rate limit + lookup (bypasses RLS) + profile update + code rotation
 create or replace function join_household_by_code(code text)
-returns uuid language plpgsql security definer as $$
+returns uuid language plpgsql security definer
+set search_path = public
+as $$
 declare
   h_id uuid;
-  new_code text;
 begin
+  if auth.uid() is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  if (select count(*) from invite_join_attempts
+      where user_id = auth.uid()
+        and attempted_at > now() - interval '1 hour') >= 5 then
+    raise exception 'Too many attempts';
+  end if;
+  insert into invite_join_attempts (user_id) values (auth.uid());
+
   select id into h_id from households where invite_code = upper(trim(code));
   if h_id is null then
     raise exception 'Invalid invite code';
@@ -160,10 +214,67 @@ begin
 
   update profiles set household_id = h_id where id = auth.uid();
 
-  -- Rotate code using pgcrypto-safe random UUID fragment
-  new_code := upper(substring(replace(gen_random_uuid()::text, '-', ''), 1, 8));
-  update households set invite_code = new_code where id = h_id;
+  update households set invite_code = generate_invite_code() where id = h_id;
 
+  delete from invite_join_attempts where user_id = auth.uid();
   return h_id;
 end;
 $$;
+
+-- Atomic household creation: household + profile link + jar seeding in one transaction.
+-- Required because the profiles RLS policy blocks direct household_id changes.
+create or replace function create_household(p_name text)
+returns json language plpgsql security definer
+set search_path = public
+as $$
+declare
+  h households;
+begin
+  if auth.uid() is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  insert into households (name, invite_code)
+  values (p_name, generate_invite_code())
+  returning * into h;
+
+  update profiles set household_id = h.id where id = auth.uid();
+
+  insert into jars (id, household_id, balance, allocation_pct)
+  values
+    ('giving',    h.id, 0, 10),
+    ('investing', h.id, 0, 10),
+    ('savings',   h.id, 0, 10),
+    ('living',    h.id, 0, 60),
+    ('seed',      h.id, 0, 10);
+
+  return row_to_json(h);
+end;
+$$;
+
+-- Auto-create profile on signup (metadata passed via signUp options.data).
+-- With email confirmation enabled there is no session right after signUp,
+-- so a client-side profiles insert would silently fail RLS.
+create or replace function handle_new_user()
+returns trigger language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if new.raw_user_meta_data ? 'nickname' then
+    insert into profiles (id, nickname, birth_date, country)
+    values (
+      new.id,
+      new.raw_user_meta_data->>'nickname',
+      (new.raw_user_meta_data->>'birth_date')::date,
+      new.raw_user_meta_data->>'country'
+    )
+    on conflict (id) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function handle_new_user();

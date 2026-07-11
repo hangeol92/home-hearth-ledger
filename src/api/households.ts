@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase';
-import { JARS } from '@/types';
 
 export async function getMyHousehold() {
   const { data: profile } = await supabase
@@ -10,36 +9,13 @@ export async function getMyHousehold() {
 }
 
 export async function createHousehold(name: string) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('You must be signed in to create a household.');
-
-  const inviteCode = generateCode();
-  const { data: household, error: hErr } = await supabase
-    .from('households')
-    .insert({ name, invite_code: inviteCode })
-    .select()
-    .single();
-  if (hErr) throw new Error(hErr.message);
-
-  // Link profile to new household
-  const { error: pErr } = await supabase
-    .from('profiles')
-    .update({ household_id: household.id })
-    .eq('id', user.id);
-  if (pErr) throw new Error(`Profile update failed: ${pErr.message}`);
-
-  // Seed default jar rows
-  const { error: jErr } = await supabase.from('jars').insert(
-    JARS.map(j => ({
-      id: j.id,
-      household_id: household.id,
-      balance: 0,
-      allocation_pct: j.defaultPct,
-    }))
-  );
-  if (jErr) throw new Error(`Jar setup failed: ${jErr.message}`);
-
-  return household;
+  // Server-side RPC: household 생성 + 프로필 연결 + 항아리 시드를 한 트랜잭션으로.
+  // profiles RLS가 household_id 직접 변경을 막으므로 반드시 RPC 경유.
+  const { data: household, error } = await supabase.rpc('create_household', {
+    p_name: name,
+  });
+  if (error) throw new Error(error.message);
+  return household as { id: string; name: string; invite_code: string };
 }
 
 export async function generateInviteCode(householdId: string) {
@@ -61,7 +37,8 @@ export async function joinByInviteCode(code: string) {
 }
 
 function generateCode(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  // 32자 알파벳: 256 % 32 === 0 이라 모듈로 편향 없음
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const bytes = new Uint8Array(8);
   crypto.getRandomValues(bytes);
   return Array.from(bytes).map(b => chars[b % chars.length]).join('');

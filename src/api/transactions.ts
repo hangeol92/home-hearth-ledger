@@ -23,7 +23,8 @@ function fromRow(row: Record<string, unknown>): Transaction {
     id: row.id as string,
     type: row.type as Transaction['type'],
     amount: row.amount as number,
-    jar: row.jar as Transaction['jar'],
+    // 수입 거래는 DB에 jar가 null로 저장됨 — 로컬 모델과 동일하게 undefined로
+    jar: (row.jar ?? undefined) as Transaction['jar'],
     subCategory: row.sub_category as string,
     category: row.category as Transaction['category'],
     note: row.note as string,

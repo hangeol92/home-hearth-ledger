@@ -8,7 +8,9 @@ alter table jars            enable row level security;
 
 -- Helper: return household_id for the current auth user
 create or replace function current_household_id()
-returns uuid language sql stable security definer as $$
+returns uuid language sql stable security definer
+set search_path = public
+as $$
   select household_id from profiles where id = auth.uid()
 $$;
 
@@ -30,7 +32,14 @@ create policy "household members can update their household"
 -- Note: invite code lookup for joining uses join_household_by_code() RPC (security definer),
 -- which bypasses RLS intentionally. Direct SELECT by invite_code from client is blocked.
 
--- Profiles: users manage their own profile
+-- Profiles: users manage their own profile.
+-- NOTE: legacy policies (profiles_select_own / profiles_insert_own / profiles_update_own)
+-- must be dropped — permissive policies OR together, so a policy without WITH CHECK
+-- would allow is_admin self-escalation.
+drop policy if exists "profiles_select_own" on profiles;
+drop policy if exists "profiles_insert_own" on profiles;
+drop policy if exists "profiles_update_own" on profiles;
+
 create policy "users read own profile"
   on profiles for select
   using (id = auth.uid());
@@ -44,7 +53,14 @@ create policy "users update own profile"
   using (id = auth.uid())
   with check (
     id = auth.uid()
+    -- is_admin cannot be changed by the user themselves
     and is_admin = (select is_admin from profiles where id = auth.uid())
+    -- household_id: keep current value or leave (null); joining/creating goes
+    -- through join_household_by_code / create_household RPCs only
+    and (
+      household_id is null
+      or household_id = (select household_id from profiles where id = auth.uid())
+    )
   );
 
 -- Members: scoped to household

@@ -49,6 +49,22 @@ function resolvePlatform(store: string): Platform {
   return 'web';
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Constant-time comparison via digest to avoid leaking the secret through timing
+async function safeEqual(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const [da, db] = await Promise.all([
+    crypto.subtle.digest('SHA-256', enc.encode(a)),
+    crypto.subtle.digest('SHA-256', enc.encode(b)),
+  ]);
+  const va = new Uint8Array(da);
+  const vb = new Uint8Array(db);
+  let diff = 0;
+  for (let i = 0; i < va.length; i++) diff |= va[i] ^ vb[i];
+  return diff === 0;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
@@ -61,7 +77,7 @@ Deno.serve(async (req: Request) => {
     return new Response('Internal Server Error', { status: 500 });
   }
   const authHeader = req.headers.get('Authorization') ?? '';
-  if (authHeader !== secret) {
+  if (!(await safeEqual(authHeader, secret))) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -90,8 +106,14 @@ Deno.serve(async (req: Request) => {
     return new Response('OK', { status: 200 });
   }
 
-  // app_user_id = Supabase user UUID (set via loginPurchases in the app)
+  // app_user_id = Supabase user UUID (set via loginPurchases in the app).
+  // Anonymous RC IDs ($RCAnonymousID:...) are not linked to a user yet —
+  // acknowledge with 200 so RevenueCat does not retry forever.
   const userId = event.original_app_user_id || event.app_user_id;
+  if (!UUID_RE.test(userId)) {
+    console.log(`[RC] Skipping non-UUID app_user_id: ${event.type}`);
+    return new Response('OK', { status: 200 });
+  }
 
   // Service role key bypasses RLS — safe only in Edge Function (server-side)
   const supabase = createClient(

@@ -7,16 +7,22 @@ export interface SignUpProfile {
 }
 
 export async function signUp(email: string, password: string, profile: SignUpProfile): Promise<void> {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  // 프로필 행은 auth.users 트리거(handle_new_user)가 생성.
+  // 이메일 확인이 켜져 있으면 signUp 직후 세션이 없어
+  // 클라이언트 insert는 RLS에 막히므로 메타데이터로 전달한다.
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        nickname: profile.nickname,
+        birth_date: profile.birth_date,
+        country: profile.country,
+      },
+    },
+  });
   if (error) throw error;
   if (!data.user) throw new Error('User creation failed');
-
-  await supabase.from('profiles').insert({
-    id: data.user.id,
-    nickname: profile.nickname,
-    birth_date: profile.birth_date,
-    country: profile.country,
-  });
 }
 
 export async function signIn(email: string, password: string): Promise<void> {
