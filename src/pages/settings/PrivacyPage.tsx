@@ -16,7 +16,7 @@ interface PrivacyContent {
 
 const CONTENT: Record<Lang, PrivacyContent> = {
   ko: {
-    effectiveDate: '시행일: 2025년 1월 1일 · 최종 수정: 2026년 5월 1일',
+    effectiveDate: '시행일: 2025년 1월 1일 · 최종 수정: 2026년 11월 9일',
     sections: [
       {
         title: '1. 개인정보처리자',
@@ -35,6 +35,9 @@ const CONTENT: Record<Lang, PrivacyContent> = {
           '· 가계부 데이터: 거래 날짜, 금액, 카테고리, 메모',
           '· 가구 정보: 가구 이름, 구성원 이름 및 색상',
           '· 구독 정보: 구독 상태, 만료일, 결제 플랫폼',
+          '■ 자동 수집 정보',
+          '· 오류 및 크래시 진단 정보 (Sentry)',
+          '· 광고 식별자: 트래킹 동의 시에만 맞춤 광고에 사용 (Google AdMob), 동의하지 않아도 모든 기능 이용 가능',
           '■ 수집하지 않는 정보',
           '· 위치 정보, 연락처, 금융 계좌 정보, 주민등록번호',
         ],
@@ -63,6 +66,8 @@ const CONTENT: Record<Lang, PrivacyContent> = {
           '이용자의 동의 없이 개인정보를 제3자에게 제공하지 않습니다. 다만 서비스 제공을 위해 다음 업체에 위탁합니다.',
           '· Supabase Inc. (미국) — 데이터베이스 저장 및 인증',
           '· RevenueCat Inc. (미국) — 구독 및 결제 관리',
+          '· Google AdMob (미국) — 광고 게재 (트래킹 동의 시 광고 식별자 사용)',
+          '· Sentry (미국) — 오류 및 크래시 리포트 수집',
           '위탁 업체는 위탁 목적 이외의 용도로 개인정보를 처리하지 않습니다.',
         ],
       },
@@ -103,7 +108,7 @@ const CONTENT: Record<Lang, PrivacyContent> = {
   },
 
   en: {
-    effectiveDate: 'Effective: January 1, 2025 · Last updated: May 1, 2026',
+    effectiveDate: 'Effective: January 1, 2025 · Last updated: November 9, 2026',
     sections: [
       {
         title: '1. Data Controller',
@@ -122,6 +127,9 @@ const CONTENT: Record<Lang, PrivacyContent> = {
           '· Ledger data: transaction dates, amounts, categories, notes',
           '· Household info: household name, member names and colors',
           '· Subscription info: status, expiry date, payment platform',
+          '■ Automatically collected',
+          '· Error and crash diagnostics (Sentry)',
+          '· Advertising identifier: used for ad personalization only if you consent to tracking (Google AdMob); all features remain available if you decline',
           '■ Data we do NOT collect',
           '· Location, contacts, bank account details, government ID numbers',
         ],
@@ -150,6 +158,8 @@ const CONTENT: Record<Lang, PrivacyContent> = {
           'We do not sell or share your data with third parties. We use the following processors solely to deliver the service:',
           '· Supabase Inc. (USA) — database storage and authentication',
           '· RevenueCat Inc. (USA) — subscription and payment management',
+          '· Google AdMob (USA) — ad serving (uses advertising identifier only if you consent to tracking)',
+          '· Sentry (USA) — error and crash reporting',
           'These processors may only use your data for the stated purpose.',
         ],
       },
@@ -190,7 +200,7 @@ const CONTENT: Record<Lang, PrivacyContent> = {
   },
 
   ja: {
-    effectiveDate: '施行日：2025年1月1日 · 最終更新：2026年5月1日',
+    effectiveDate: '施行日：2025年1月1日 · 最終更新：2026年11月9日',
     sections: [
       {
         title: '1. 個人情報取扱事業者',
@@ -209,6 +219,9 @@ const CONTENT: Record<Lang, PrivacyContent> = {
           '· 家計簿データ：取引日、金額、カテゴリ、メモ',
           '· 世帯情報：世帯名、メンバー名・カラー',
           '· サブスクリプション情報：ステータス、有効期限、決済プラットフォーム',
+          '■ 自動的に収集される情報',
+          '· エラー・クラッシュ診断情報（Sentry）',
+          '· 広告識別子：トラッキングに同意した場合のみ広告のパーソナライズに使用（Google AdMob）。同意しなくても全機能を利用できます',
           '■ 収集しない情報',
           '· 位置情報、連絡先、金融口座情報、マイナンバー等',
         ],
@@ -237,6 +250,8 @@ const CONTENT: Record<Lang, PrivacyContent> = {
           'ご同意なく個人情報を第三者へ提供することはありません。サービス提供のために以下の業者に委託しています。',
           '· Supabase Inc.（米国）— データベース保管・認証',
           '· RevenueCat Inc.（米国）— サブスクリプション・決済管理',
+          '· Google AdMob（米国）— 広告配信（トラッキングに同意した場合のみ広告識別子を使用）',
+          '· Sentry（米国）— エラー・クラッシュレポートの収集',
           '委託先は委託目的以外に個人情報を利用しません。',
         ],
       },
