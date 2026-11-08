@@ -1,7 +1,9 @@
 import type { Transaction, FamilyMember } from '@/types';
 
 // RFC 4180: 쉼표/따옴표/줄바꿈 포함 필드는 따옴표로 감싸고 내부 따옴표는 이중화
+// CSV Injection 방지: =/+/-/@로 시작하면 엑셀이 수식으로 해석하므로 앞에 ' 붙여 무력화
 function escapeField(value: string): string {
+  if (/^[=+\-@]/.test(value)) value = `'${value}`;
   if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
   return value;
 }
