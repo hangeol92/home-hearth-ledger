@@ -9,12 +9,13 @@ import { JARS } from '@/types';
 import {
   Download, Trash2, LogOut, AlertTriangle, Eye, EyeOff,
   ChevronRight, Users, Gem, Globe, DollarSign, Home, Star,
-  HelpCircle, Mail, Info, Shield, FileText, Target, Repeat,
+  HelpCircle, Mail, Info, Shield, FileText, Target, Repeat, UserX,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGES } from '@/i18n';
 import { getMyHousehold } from '@/api/households';
+import { deleteAccount } from '@/api/account';
 
 const APP_VERSION = '1.0.0';
 
@@ -77,6 +78,12 @@ export default function SettingsPage() {
   const [clearLoading, setClearLoading] = useState(false);
   const [clearError, setClearError] = useState('');
 
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deletePasswordVisible, setDeletePasswordVisible] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   const handleSignOut = async () => {
     try { await signOut(); navigate('/login'); }
     catch { toast({ title: 'Sign out failed', variant: 'destructive' }); }
@@ -110,6 +117,24 @@ export default function SettingsPage() {
       await clearAllData(); window.location.reload();
     } catch {
       setClearError('Verification failed. Try again.'); setClearLoading(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!user) return;
+    if (!deletePassword) { setDeleteError('Please enter your password.'); return; }
+    setDeleteLoading(true); setDeleteError('');
+    try {
+      const { error: authError } = await import('@/lib/supabase').then(m =>
+        m.supabase.auth.signInWithPassword({ email: user.email!, password: deletePassword })
+      );
+      if (authError) { setDeleteError('Incorrect password.'); setDeleteLoading(false); return; }
+      await deleteAccount();
+      await import('@/lib/supabase').then(m => m.supabase.auth.signOut());
+      await clearAllData();
+      navigate('/login');
+    } catch {
+      setDeleteError('Account deletion failed. Try again.'); setDeleteLoading(false);
     }
   };
 
@@ -167,6 +192,53 @@ export default function SettingsPage() {
         </div>
       )}
 
+      {/* Delete account dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDeleteDialog(false)} />
+          <div className="relative bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl">
+            <div className="flex justify-center mb-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+                <AlertTriangle className="h-7 w-7 text-red-600" />
+              </div>
+            </div>
+            <h2 className="text-center text-lg font-bold mb-1">{t('settings.deleteAccount')}</h2>
+            <p className="text-center text-sm text-gray-500 mb-5">
+              {t('settings.deleteAccountDesc')}
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.passwordConfirm')}</label>
+              <div className="relative">
+                <input
+                  type={deletePasswordVisible ? 'text' : 'password'}
+                  value={deletePassword}
+                  onChange={e => { setDeletePassword(e.target.value); setDeleteError(''); }}
+                  placeholder="Password"
+                  autoComplete="off" data-1p-ignore
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-11 text-sm focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-400"
+                  onKeyDown={e => e.key === 'Enter' && handleDeleteConfirm()}
+                  autoFocus
+                />
+                <button type="button" onClick={() => setDeletePasswordVisible(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  {deletePasswordVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {deleteError && <p className="mt-1.5 text-xs text-red-600">{deleteError}</p>}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setShowDeleteDialog(false)}
+                className="flex-1 h-12 rounded-xl border border-gray-200 text-sm font-medium">{t('actions.cancel')}</button>
+              <button onClick={handleDeleteConfirm}
+                disabled={deleteLoading || !deletePassword}
+                className="flex-1 h-12 rounded-xl bg-red-600 text-white text-sm font-semibold disabled:opacity-40">
+                {deleteLoading ? t('settings.clearing') : t('settings.confirmDeleteBtn')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="px-5 pt-2 pb-4">
         <h1 className="text-2xl font-bold">{t('settings.title')}</h1>
@@ -199,13 +271,21 @@ export default function SettingsPage() {
       <SectionHeader label={t('settings.account')} />
       <SectionCard>
         {user ? (
-          <div className="flex items-center gap-3 px-4 py-3.5">
-            <span className="text-muted-foreground shrink-0"><LogOut className="h-4 w-4" /></span>
-            <span className="flex-1 text-sm font-medium text-left truncate text-muted-foreground">{user.email}</span>
-            <button onClick={handleSignOut} className="shrink-0 text-xs font-semibold text-destructive px-2 py-1 rounded-lg active:bg-destructive/10">
-              {t('settings.logout')}
-            </button>
-          </div>
+          <>
+            <div className="flex items-center gap-3 px-4 py-3.5">
+              <span className="text-muted-foreground shrink-0"><LogOut className="h-4 w-4" /></span>
+              <span className="flex-1 text-sm font-medium text-left truncate text-muted-foreground">{user.email}</span>
+              <button onClick={handleSignOut} className="shrink-0 text-xs font-semibold text-destructive px-2 py-1 rounded-lg active:bg-destructive/10">
+                {t('settings.logout')}
+              </button>
+            </div>
+            <SettingsRow
+              icon={<UserX className="h-4 w-4" />}
+              label={t('settings.deleteAccount')}
+              onPress={() => { setDeletePassword(''); setDeleteError(''); setShowDeleteDialog(true); }}
+              danger
+            />
+          </>
         ) : (
           <>
             <SettingsRow icon={<LogOut className="h-4 w-4" />} label={t('settings.login')} onPress={() => navigate('/login')} />
