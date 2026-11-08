@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.homehearth.ledger',
+  appId: 'five.onggis',
   appName: 'Five Onggis',
   webDir: 'dist',
 
