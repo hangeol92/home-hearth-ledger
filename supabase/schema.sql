@@ -16,8 +16,15 @@ create table if not exists profiles (
   created_at timestamptz default now()
 );
 
--- Backfill column if table already exists
+-- Backfill columns if table already exists
 alter table profiles add column if not exists is_admin boolean not null default false;
+-- nickname/birth_date/country: required by handle_new_user() and the signup
+-- form (AddTransaction's sign-up flow), but missing from the original
+-- create-table above — without these, every real signup fails with
+-- "Database error creating new user" since the trigger can't insert them.
+alter table profiles add column if not exists nickname text;
+alter table profiles add column if not exists birth_date date;
+alter table profiles add column if not exists country text;
 
 -- Family members (named slots inside a household, not auth users)
 create table if not exists members (
