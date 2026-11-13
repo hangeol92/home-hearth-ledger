@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useId } from 'react';
 import * as localDb from '@/lib/db';
 import { useStorage } from '@/hooks/useStorage';
 import { supabase } from '@/lib/supabase';
@@ -10,6 +10,7 @@ export function useTransactions() {
   storageRef.current = storage;
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const id = useId();
 
   const refresh = useCallback(async () => {
     const data = await storageRef.current.getAllTransactions();
@@ -20,8 +21,12 @@ export function useTransactions() {
   useEffect(() => { refresh(); }, [refresh]);
 
   useEffect(() => {
+    // 채널명에 useId()를 섞는 이유: 같은 이름의 채널은 supabase-js가 내부적으로
+    // 재사용하는데, 이 훅은 RecurringRunner 등 여러 컴포넌트에서 동시에 마운트되므로
+    // 고정 이름을 쓰면 두 번째 인스턴스의 subscribe()가 "이미 구독된 채널에 콜백 추가"
+    // 에러를 던지며 전체 화면이 크래시한다.
     const channel = supabase
-      .channel('transactions-changes')
+      .channel(`transactions-changes-${id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
         refresh();
       })
@@ -109,6 +114,7 @@ export function useBudgets() {
   const storageRef = useRef(storage);
   storageRef.current = storage;
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const id = useId();
 
   const refresh = useCallback(async () => {
     setBudgets(await storageRef.current.getAllBudgets());
@@ -118,7 +124,7 @@ export function useBudgets() {
 
   useEffect(() => {
     const channel = supabase
-      .channel('budgets-changes')
+      .channel(`budgets-changes-${id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'budgets' }, () => {
         refresh();
       })
@@ -144,6 +150,7 @@ export function useMembers() {
   const storageRef = useRef(storage);
   storageRef.current = storage;
   const [members, setMembers] = useState<FamilyMember[]>([]);
+  const id = useId();
 
   const refresh = useCallback(async () => {
     setMembers(await storageRef.current.getAllMembers());
@@ -153,7 +160,7 @@ export function useMembers() {
 
   useEffect(() => {
     const channel = supabase
-      .channel('members-changes')
+      .channel(`members-changes-${id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, () => {
         refresh();
       })
@@ -181,6 +188,7 @@ export function useJars() {
   const storageRef = useRef(storage);
   storageRef.current = storage;
   const [jars, setJars] = useState<JarBalance[]>([]);
+  const id = useId();
 
   const refresh = useCallback(async () => {
     setJars(await storageRef.current.getAllJars());
@@ -192,7 +200,7 @@ export function useJars() {
 
   useEffect(() => {
     const channel = supabase
-      .channel('jars-changes')
+      .channel(`jars-changes-${id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'jars' }, () => {
         refresh();
       })
