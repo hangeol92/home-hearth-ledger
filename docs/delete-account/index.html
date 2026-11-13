@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Five Onggis — Account Deletion</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    margin: 0;
+    background: #fafafa;
+    color: #18181b;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple SD Gothic Neo", "Noto Sans KR", "Noto Sans JP", sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 4rem;
+  }
+  h1 { font-size: 1.375rem; font-weight: 700; margin: 0 0 1.5rem; }
+  .langs { display: flex; gap: 0.5rem; margin-bottom: 1.75rem; }
+  .langs button {
+    font: inherit; font-size: 0.8rem; font-weight: 600;
+    padding: 0.4rem 0.9rem; border-radius: 999px; border: 1px solid #d4d4d8;
+    background: #fff; color: #52525b; cursor: pointer;
+  }
+  .langs button.active { background: #18181b; color: #fff; border-color: #18181b; }
+  section { margin-bottom: 1.5rem; }
+  section h2 { font-size: 0.95rem; font-weight: 700; margin: 0 0 0.5rem; }
+  section p, section ol, section ul { font-size: 0.875rem; color: #3f3f46; margin: 0.2rem 0; }
+  ol, ul { padding-left: 1.25rem; }
+  li { margin: 0.25rem 0; }
+  a { color: #2563d9; }
+  .doc { display: none; }
+  .doc.active { display: block; }
+  footer { margin-top: 2.5rem; font-size: 0.75rem; color: #a1a1aa; }
+</style>
+</head>
+<body>
+<main>
+  <div class="langs">
+    <button data-lang="ko" class="active">한국어</button>
+    <button data-lang="en">English</button>
+    <button data-lang="ja">日本語</button>
+  </div>
+
+  <div id="doc-ko" class="doc active">
+    <h1>Five Onggis — 계정 및 데이터 삭제</h1>
+
+    <section><h2>방법 1. 앱에서 직접 삭제 (즉시 처리)</h2>
+      <ol>
+        <li>Five Onggis 앱 실행 후 로그인</li>
+        <li>하단 탭 → <strong>설정</strong> 이동</li>
+        <li><strong>계정</strong> 섹션에서 <strong>"회원 탈퇴"</strong> 선택</li>
+        <li>비밀번호 확인 후 "탈퇴하기" 선택</li>
+      </ol>
+      <p>진행 즉시 계정이 삭제됩니다.</p>
+    </section>
+
+    <section><h2>방법 2. 앱을 삭제했거나 로그인할 수 없는 경우</h2>
+      <p>가입 시 사용한 이메일 주소로 <a href="mailto:support@fivejars.app?subject=계정 삭제 요청">support@fivejars.app</a> 에 "계정 삭제 요청"이라는 제목으로 메일을 보내주세요. 본인 확인 후 <strong>30일 이내</strong>에 처리됩니다.</p>
+    </section>
+
+    <section><h2>삭제되는 데이터</h2>
+      <ul>
+        <li>계정 정보: 이메일, 닉네임, 생년월일, 국가</li>
+        <li>구독/결제 상태 기록</li>
+        <li>해당 가구(household)에 다른 구성원이 없는 경우, 그 가구의 가계부 데이터(거래 내역, 예산, 항아리 잔액, 구성원 목록)도 함께 삭제됩니다</li>
+      </ul>
+    </section>
+
+    <section><h2>삭제되지 않거나 일정 기간 보존되는 데이터</h2>
+      <ul>
+        <li>가구를 다른 구성원과 공유 중인 경우, 탈퇴 후에도 그 가구의 공유 가계부 데이터는 남은 구성원을 위해 유지됩니다 (탈퇴한 본인의 계정 자체는 삭제됨)</li>
+        <li>전자상거래 거래 기록: 전자상거래법에 따라 5년간 보존 후 파기</li>
+      </ul>
+      <p>자세한 내용은 <a href="../privacy/">개인정보처리방침</a>을 참고해 주세요.</p>
+    </section>
+  </div>
+
+  <div id="doc-en" class="doc">
+    <h1>Five Onggis — Account &amp; Data Deletion</h1>
+
+    <section><h2>Option 1. Delete in-app (processed immediately)</h2>
+      <ol>
+        <li>Open the Five Onggis app and sign in</li>
+        <li>Go to the <strong>Settings</strong> tab</li>
+        <li>Under <strong>Account</strong>, select <strong>"Delete Account"</strong></li>
+        <li>Confirm your password, then select "Delete Account"</li>
+      </ol>
+      <p>Your account is deleted immediately.</p>
+    </section>
+
+    <section><h2>Option 2. If you no longer have the app or can't sign in</h2>
+      <p>Email <a href="mailto:support@fivejars.app?subject=Account deletion request">support@fivejars.app</a> from the email address you signed up with, with the subject "Account deletion request." Your request will be processed within <strong>30 days</strong> after verification.</p>
+    </section>
+
+    <section><h2>Data that is deleted</h2>
+      <ul>
+        <li>Account info: email, nickname, date of birth, country</li>
+        <li>Subscription/payment status record</li>
+        <li>If you are the only member of your household, that household's ledger data (transactions, budgets, jar balances, member list) is deleted as well</li>
+      </ul>
+    </section>
+
+    <section><h2>Data that is retained or not deleted</h2>
+      <ul>
+        <li>If your household is shared with other members, the shared ledger data remains for the remaining members after your account is deleted</li>
+        <li>E-commerce transaction records: retained for 5 years as required by Korean e-commerce law, then deleted</li>
+      </ul>
+      <p>See the <a href="../privacy/">Privacy Policy</a> for full details.</p>
+    </section>
+  </div>
+
+  <div id="doc-ja" class="doc">
+    <h1>Five Onggis — アカウントおよびデータの削除</h1>
+
+    <section><h2>方法1. アプリ内で削除（即時処理）</h2>
+      <ol>
+        <li>Five Onggis アプリを開いてログイン</li>
+        <li>下部タブの <strong>設定</strong> に移動</li>
+        <li><strong>アカウント</strong>セクションで<strong>「退会する」</strong>を選択</li>
+        <li>パスワードを確認し「退会する」を選択</li>
+      </ol>
+      <p>操作後すぐにアカウントが削除されます。</p>
+    </section>
+
+    <section><h2>方法2. アプリを削除済み、またはログインできない場合</h2>
+      <p>登録時に使用したメールアドレスから <a href="mailto:support@fivejars.app?subject=アカウント削除依頼">support@fivejars.app</a> 宛てに、件名「アカウント削除依頼」でメールをお送りください。本人確認後<strong>30日以内</strong>に処理されます。</p>
+    </section>
+
+    <section><h2>削除されるデータ</h2>
+      <ul>
+        <li>アカウント情報：メールアドレス、ニックネーム、生年月日、国</li>
+        <li>サブスクリプション・決済状況の記録</li>
+        <li>世帯（household）に他のメンバーがいない場合、その世帯の家計簿データ（取引履歴、予算、壺残高、メンバー一覧）も削除されます</li>
+      </ul>
+    </section>
+
+    <section><h2>削除されない、または一定期間保存されるデータ</h2>
+      <ul>
+        <li>世帯を他のメンバーと共有している場合、退会後もその世帯の共有家計簿データは残りのメンバーのために保持されます</li>
+        <li>電子商取引の記録：韓国の電子商取引法に基づき5年間保存後に削除</li>
+      </ul>
+      <p>詳細は<a href="../privacy/">プライバシーポリシー</a>をご覧ください。</p>
+    </section>
+  </div>
+
+  <footer>Five Onggis</footer>
+</main>
+
+<script>
+  document.querySelectorAll('.langs button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var lang = btn.getAttribute('data-lang');
+      document.querySelectorAll('.langs button').forEach(function (b) { b.classList.toggle('active', b === btn); });
+      document.querySelectorAll('.doc').forEach(function (d) { d.classList.toggle('active', d.id === 'doc-' + lang); });
+    });
+  });
+</script>
+</body>
+</html>
