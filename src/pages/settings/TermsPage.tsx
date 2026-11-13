@@ -17,7 +17,7 @@ interface TermsContent {
 
 const CONTENT: Record<Lang, TermsContent> = {
   ko: {
-    effectiveDate: '시행일: 2025년 1월 1일 · 최종 수정: 2026년 5월 1일',
+    effectiveDate: '시행일: 2025년 1월 1일 · 최종 수정: 2026년 11월 13일',
     contact: '문의: support@fivejars.app',
     sections: [
       {
@@ -29,8 +29,9 @@ const CONTENT: Record<Lang, TermsContent> = {
       {
         title: '제2조 이용 자격',
         items: [
-          '만 14세 이상 누구나 이용할 수 있습니다.',
-          '만 14세 미만은 법정대리인의 동의가 필요합니다.',
+          '회원가입 및 계정 관리는 법정대리인(보호자)이 진행합니다.',
+          '자녀 등 다른 가족 구성원은 보호자가 등록한 가구(household)의 구성원으로 추가되어 별도의 계정 생성 없이 함께 이용할 수 있습니다.',
+          '보호자는 가구 구성원(자녀 포함)의 앱 이용 내용을 관리할 책임이 있습니다.',
         ],
       },
       {
@@ -98,7 +99,7 @@ const CONTENT: Record<Lang, TermsContent> = {
   },
 
   en: {
-    effectiveDate: 'Effective: January 1, 2025 · Last updated: May 1, 2026',
+    effectiveDate: 'Effective: January 1, 2025 · Last updated: November 13, 2026',
     contact: 'Contact: support@fivejars.app',
     sections: [
       {
@@ -110,8 +111,9 @@ const CONTENT: Record<Lang, TermsContent> = {
       {
         title: 'Article 2 — Eligibility',
         items: [
-          'Anyone aged 14 or older may use the App.',
-          'Users under 14 require consent from a legal guardian.',
+          'Account creation and management must be carried out by a parent or legal guardian.',
+          'Children and other family members may be added as household members by the guardian and use the App together without creating a separate account.',
+          'The guardian is responsible for overseeing household members\' (including children\'s) use of the App.',
         ],
       },
       {
@@ -179,7 +181,7 @@ const CONTENT: Record<Lang, TermsContent> = {
   },
 
   ja: {
-    effectiveDate: '施行日：2025年1月1日 · 最終更新：2026年5月1日',
+    effectiveDate: '施行日：2025年1月1日 · 最終更新：2026年11月13日',
     contact: 'お問い合わせ: support@fivejars.app',
     sections: [
       {
@@ -191,8 +193,9 @@ const CONTENT: Record<Lang, TermsContent> = {
       {
         title: '第2条 利用資格',
         items: [
-          '14歳以上であればどなたでもご利用いただけます。',
-          '14歳未満の方は、法定代理人の同意が必要です。',
+          'アカウントの作成および管理は、保護者（法定代理人）が行います。',
+          'お子様などのご家族は、保護者が登録した世帯（household）のメンバーとして追加され、別途アカウントを作成せずに一緒にご利用いただけます。',
+          '保護者は、お子様を含む世帯メンバーのアプリ利用について管理する責任を負います。',
         ],
       },
       {

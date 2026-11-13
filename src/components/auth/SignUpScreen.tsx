@@ -23,20 +23,7 @@ export default function SignUpScreen({ onSuccess }: SignUpScreenProps) {
 
   const validateEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const isStep1Valid = validateEmail(email) && password.length >= 8;
-
-  // 이용약관상 만 14세 미만은 가입 불가 (법정대리인 동의 플로우 미구현)
-  const calculateAge = (dob: string): number => {
-    const birth = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const hadBirthdayThisYear =
-      today.getMonth() > birth.getMonth() ||
-      (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
-    if (!hadBirthdayThisYear) age--;
-    return age;
-  };
-  const isUnderage = birthDate.length > 0 && calculateAge(birthDate) < 14;
-  const isStep2Valid = nickname.trim().length > 0 && birthDate.length > 0 && !isUnderage;
+  const isStep2Valid = nickname.trim().length > 0 && birthDate.length > 0;
 
   const handleStep1 = async () => {
     if (!isStep1Valid) {
@@ -47,10 +34,6 @@ export default function SignUpScreen({ onSuccess }: SignUpScreenProps) {
   };
 
   const handleStep2 = async () => {
-    if (isUnderage) {
-      toast({ title: 'You must be at least 14 years old to sign up.', variant: 'destructive' });
-      return;
-    }
     if (!isStep2Valid) {
       toast({ title: 'Please fill in all fields', variant: 'destructive' });
       return;
@@ -153,9 +136,6 @@ export default function SignUpScreen({ onSuccess }: SignUpScreenProps) {
                   onChange={e => setBirthDate(e.target.value)}
                   className="w-full border-b border-gray-300 rounded-none border-t-0 border-l-0 border-r-0 bg-transparent px-0 py-2 text-base focus:border-black focus:ring-0"
                 />
-                {isUnderage && (
-                  <p className="text-xs text-red-500">You must be at least 14 years old to sign up.</p>
-                )}
               </div>
 
               <div className="space-y-2">
