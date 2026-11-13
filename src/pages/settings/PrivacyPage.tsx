@@ -49,6 +49,7 @@ const CONTENT: Record<Lang, PrivacyContent> = {
           '· 가계부 데이터 클라우드 동기화',
           '· 가족 공유 가계부 기능 제공',
           '· 구독 상태 확인 및 유료 기능 제공',
+          '· 서비스 개선 및 통계 기능 제공 (개인을 식별할 수 없도록 집계된 통계만 활용, 예: 연령대별 평균 비교)',
         ],
       },
       {
@@ -141,6 +142,7 @@ const CONTENT: Record<Lang, PrivacyContent> = {
           '· Cloud sync of your ledger data',
           '· Shared household ledger feature',
           '· Verifying subscription status and enabling premium features',
+          '· Service improvement and statistical features (only de-identified, aggregated statistics are used, e.g. comparing averages across age groups)',
         ],
       },
       {
@@ -233,6 +235,7 @@ const CONTENT: Record<Lang, PrivacyContent> = {
           '· 家計簿データのクラウド同期',
           '· 家族共有家計簿機能の提供',
           '· サブスクリプション確認およびプレミアム機能の提供',
+          '· サービス改善および統計機能の提供（個人を識別できない集計統計のみ利用。例：年代別平均の比較）',
         ],
       },
       {

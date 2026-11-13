@@ -124,6 +124,57 @@ create trigger subscriptions_updated_at
   before update on subscriptions
   for each row execute function update_subscriptions_updated_at();
 
+-- Age-bracket jar allocation stats: aggregated & k-anonymized only — never
+-- returns household- or user-level rows, only per-jar averages across
+-- households whose account holder shares the caller's 10-year age bracket.
+-- Suppressed (row omitted) unless at least `min_households` contribute, so
+-- a small bracket can't be de-anonymized. Backs a future "see how people
+-- your age allocate their jars" feature; disclosed in the privacy policy's
+-- "Purpose of Collection" section.
+create or replace function get_age_bracket_jar_stats()
+returns table (jar text, avg_allocation_pct numeric, household_count bigint)
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  my_bracket int;
+  min_households constant int := 20;
+begin
+  if auth.uid() is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  select (extract(year from age(current_date, birth_date))::int / 10) * 10
+  into my_bracket
+  from profiles
+  where id = auth.uid();
+
+  if my_bracket is null then
+    raise exception 'Profile not found';
+  end if;
+
+  return query
+    with bracket_households as (
+      select distinct p.household_id
+      from profiles p
+      where p.household_id is not null
+        and (extract(year from age(current_date, p.birth_date))::int / 10) * 10 = my_bracket
+    ),
+    agg as (
+      select
+        j.id as jar,
+        avg(j.allocation_pct) as avg_allocation_pct,
+        count(distinct j.household_id) as household_count
+      from jars j
+      join bracket_households bh on bh.household_id = j.household_id
+      group by j.id
+    )
+    select agg.jar, round(agg.avg_allocation_pct, 1), agg.household_count
+    from agg
+    where agg.household_count >= min_households;
+end;
+$$;
+
 -- Admin stats: returns aggregated metrics; only accessible to is_admin = true users
 create or replace function get_admin_stats()
 returns json language plpgsql security definer
