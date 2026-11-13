@@ -175,6 +175,94 @@ begin
 end;
 $$;
 
+-- Age-bracket spending trend: monthly avg spend per jar+sub_category for
+-- households sharing the caller's 10-year age bracket, aggregated &
+-- k-anonymized like get_age_bracket_jar_stats (but with a higher floor —
+-- actual spending behavior is more identifying than an allocation setting).
+-- Restricted to the app's built-in sub-categories only: user-defined custom
+-- categories (stored client-side in localStorage) have small, idiosyncratic
+-- samples that would be easier to re-identify, so they're excluded here.
+create or replace function get_age_bracket_spending_trend()
+returns table (
+  month text,
+  jar text,
+  sub_category text,
+  avg_amount numeric,
+  household_count bigint
+)
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  my_bracket int;
+  min_households constant int := 30;
+  standard_subcats constant text[] := array[
+    'Donation','Charity','Tithe',
+    'Stocks','ETF','NISA','Crypto','Retirement',
+    'Emergency','Big Purchase','Travel',
+    'Opportunity','Helping Others','Business',
+    'Eating Out','Groceries','Snacks',
+    'Bus/Subway','Taxi','Fuel','Parking',
+    'Water','Electricity','Gas','Internet','Telecom',
+    'Household','Hygiene','Kitchen',
+    'Movies','Concert','Hobby','Games',
+    'Tuition','Books','Online Course','Stationery',
+    'Clothing','Shoes','Accessories',
+    'Hospital','Pharmacy','Fitness',
+    'Haircut','Skincare','Cosmetics',
+    'Accommodation','Flight','Activities',
+    'Special Expense','Other'
+  ];
+begin
+  if auth.uid() is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  select (extract(year from age(current_date, birth_date))::int / 10) * 10
+  into my_bracket
+  from profiles
+  where id = auth.uid();
+
+  if my_bracket is null then
+    raise exception 'Profile not found';
+  end if;
+
+  return query
+    with bracket_households as (
+      select distinct p.household_id
+      from profiles p
+      where p.household_id is not null
+        and (extract(year from age(current_date, p.birth_date))::int / 10) * 10 = my_bracket
+    ),
+    monthly as (
+      select
+        to_char(t.date, 'YYYY-MM') as month,
+        t.household_id,
+        t.jar,
+        t.sub_category,
+        sum(t.amount) as household_month_total
+      from transactions t
+      join bracket_households bh on bh.household_id = t.household_id
+      where t.type = 'expense'
+        and t.sub_category = any(standard_subcats)
+        and t.date >= (current_date - interval '12 months')
+      group by month, t.household_id, t.jar, t.sub_category
+    ),
+    agg as (
+      select
+        month, jar, sub_category,
+        avg(household_month_total) as avg_amount,
+        count(distinct household_id) as household_count
+      from monthly
+      group by month, jar, sub_category
+    )
+    select agg.month, agg.jar, agg.sub_category, round(agg.avg_amount, 0), agg.household_count
+    from agg
+    where agg.household_count >= min_households
+    order by agg.month, agg.jar, agg.sub_category;
+end;
+$$;
+
 -- Admin stats: returns aggregated metrics; only accessible to is_admin = true users
 create or replace function get_admin_stats()
 returns json language plpgsql security definer
